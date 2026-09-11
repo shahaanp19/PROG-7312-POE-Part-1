@@ -1,0 +1,1350 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+@using System.Net.Http.Json
+@using SmartX.Shared.Models
+
+@inject IHttpClientFactory HttpClientFactory
+@implements IDisposable
+
+<header class="gateway-header">
+    <div>
+        <span class="gateway-label">SMART-X</span>
+
+        <h1>Data Ingestion Gateway</h1>
+
+        <p>
+            Connected sensor management and telemetry monitoring.
+        </p>
+    </div>
+
+    <div class="gateway-status">
+        <span class="status-dot @(GatewayOnline ? "online" : "offline")"></span>
+        <span>@GatewayStatus</span>
+    </div>
+</header>
+
+
+<main class="gateway-content">
+
+    <!-- =====================================================
+         GATEWAY CONTROL CENTER
+         ===================================================== -->
+
+    <section class="welcome-section">
+
+        <h2>Gateway Control Center</h2>
+
+        <p>
+            Monitor gateway health, prioritise active incidents,
+            and interact directly with Smart-X system activity.
+        </p>
+
+        <button class="gateway-button"
+                @onclick="CheckGatewayAsync"
+                disabled="@IsChecking">
+
+            @(IsChecking
+                ? "Checking Gateway..."
+                : "Refresh Gateway")
+
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(ConnectionMessage))
+        {
+            <p class="@ConnectionCssClass">
+                @ConnectionMessage
+            </p>
+        }
+
+    </section>
+
+
+    <!-- =====================================================
+         DYNAMIC ENGAGEMENT COMMAND CENTRE
+         ===================================================== -->
+
+    <section class="gateway-card active">
+
+        <div class="card-icon">EC</div>
+
+        <h2>Incident Engagement Centre</h2>
+
+        <p>
+            The dashboard dynamically prioritises active incidents
+            according to severity and current system attention level.
+        </p>
+
+
+        @if (IsLoadingEngagement && EngagementSnapshot is null)
+        {
+            <p>
+                Loading live engagement data...
+            </p>
+        }
+        else if (EngagementSnapshot is not null)
+        {
+            <!-- =================================================
+                 ATTENTION STATE
+                 ================================================= -->
+
+            <div class="gateway-card active">
+
+                <h3>System Attention State</h3>
+
+                <strong>
+                    @EngagementSnapshot.AttentionLevel
+                </strong>
+
+                <p>
+                    Engagement data generated:
+                    @EngagementSnapshot.GeneratedAtUtc.ToLocalTime()
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 KPI SUMMARY
+                 ================================================= -->
+
+            <div class="gateway-grid">
+
+                <article class="gateway-card">
+
+                    <h3>Total Issues</h3>
+
+                    <strong>
+                        @EngagementSnapshot.TotalIssues
+                    </strong>
+
+                </article>
+
+
+                <article class="gateway-card">
+
+                    <h3>Open</h3>
+
+                    <strong>
+                        @EngagementSnapshot.OpenIssues
+                    </strong>
+
+                </article>
+
+
+                <article class="gateway-card">
+
+                    <h3>Critical</h3>
+
+                    <strong>
+                        @EngagementSnapshot.CriticalOpenIssues
+                    </strong>
+
+                </article>
+
+
+                <article class="gateway-card">
+
+                    <h3>Warnings</h3>
+
+                    <strong>
+                        @EngagementSnapshot.WarningOpenIssues
+                    </strong>
+
+                </article>
+
+
+                <article class="gateway-card">
+
+                    <h3>Information</h3>
+
+                    <strong>
+                        @EngagementSnapshot.InformationalOpenIssues
+                    </strong>
+
+                </article>
+
+
+                <article class="gateway-card">
+
+                    <h3>Resolved</h3>
+
+                    <strong>
+                        @EngagementSnapshot.ResolvedIssues
+                    </strong>
+
+                </article>
+
+            </div>
+
+
+            <!-- =================================================
+                 DYNAMIC ATTENTION SIGNAL
+                 ================================================= -->
+            @if (EngagementSnapshot.CriticalOpenIssues > 0)
+            {
+                <div class="connection-error">
+
+                    <strong>
+                        Immediate attention required.
+                    </strong>
+
+                    @EngagementSnapshot.CriticalOpenIssues
+                    critical
+                    @(EngagementSnapshot.CriticalOpenIssues == 1
+                        ? "incident requires"
+                        : "incidents require")
+                    immediate attention.
+
+                </div>
+            }
+            else if (EngagementSnapshot.WarningOpenIssues > 0)
+            {
+                <div class="connection-error">
+
+                    <strong>
+                        Attention required.
+                    </strong>
+
+                    @EngagementSnapshot.WarningOpenIssues
+                    warning
+                    @(EngagementSnapshot.WarningOpenIssues == 1
+                        ? "incident remains"
+                        : "incidents remain")
+                    under observation.
+
+                </div>
+            }
+            else if (EngagementSnapshot.OpenIssues > 0)
+            {
+                <div class="connection-success">
+
+                    <strong>
+                        Monitoring active.
+                    </strong>
+
+                    @EngagementSnapshot.OpenIssues
+                    open
+                    @(EngagementSnapshot.OpenIssues == 1
+                        ? "incident is"
+                        : "incidents are")
+                    currently being monitored.
+
+                </div>
+            }
+            else
+            {
+                <div class="connection-success">
+
+                    <strong>
+                        All clear.
+                    </strong>
+
+                    No active incidents currently require attention.
+
+                </div>
+            }
+
+        }
+
+    </section>
+
+
+    <!-- =====================================================
+         PRIORITY ENGAGEMENT QUEUE
+         ===================================================== -->
+    @if (EngagementSnapshot is not null)
+    {
+        <section class="gateway-card active">
+
+            <h2>Priority Attention Queue</h2>
+
+            <p>
+                The engagement engine automatically ranks active
+                incidents so the highest-risk items receive attention first.
+            </p>
+
+            @if (!EngagementSnapshot.PriorityIssues.Any())
+            {
+                <p>
+                    No active incidents require prioritisation.
+                </p>
+            }
+            else
+            {
+                <div class="issue-list">
+
+                    @foreach (var issue in EngagementSnapshot.PriorityIssues)
+                    {
+                        <article class="issue-item">
+
+                            <h3>
+                                @issue.Title
+                            </h3>
+
+                            <p>
+                                @issue.Description
+                            </p>
+
+                            <p>
+                                <strong>Severity:</strong>
+                                @issue.Severity
+                            </p>
+
+                            <p>
+                                <strong>Status:</strong>
+                                @issue.Status
+                            </p>
+
+                            <p>
+                                <strong>Reported:</strong>
+                                @issue.ReportedAtUtc.ToLocalTime()
+                            </p>
+
+                            @if (issue.Status.Equals(
+                                "Open",
+                                StringComparison.OrdinalIgnoreCase))
+                            {
+                                <button class="gateway-button"
+                                        @onclick="() => ResolveIssueAsync(issue.Id)"
+                                        disabled="@IsResolvingIssue">
+
+                                    @(IsResolvingIssue
+                                        ? "Resolving..."
+                                        : "Resolve Issue")
+
+                                </button>
+                            }
+
+                        </article>
+                    }
+
+                </div>
+            }
+
+        </section>
+    }
+
+
+    <!-- =====================================================
+         INTERACTIVE INCIDENT TRIAGE
+         ===================================================== -->
+
+    <section class="gateway-card">
+
+        <h2>Interactive Incident Triage</h2>
+
+        <p>
+            Filter and sort incidents to focus the dashboard on
+            the information most relevant to the current investigation.
+        </p>
+
+
+        <div>
+
+            <label for="issueSearch">
+                Search incidents
+            </label>
+
+            <input id="issueSearch"
+                   @bind="SearchText"
+                   @bind:event="oninput"
+                   placeholder="Search title or description..." />
+
+        </div>
+
+
+        <div>
+
+            <label for="severityFilter">
+                Severity filter
+            </label>
+
+            <select id="severityFilter"
+                    @bind="SelectedSeverity">
+
+                <option value="All">
+                    All severities
+                </option>
+
+                <option value="Critical">
+                    Critical
+                </option>
+
+                <option value="Warning">
+                    Warning
+                </option>
+
+                <option value="Info">
+                    Info
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label for="statusFilter">
+                Status filter
+            </label>
+
+            <select id="statusFilter"
+                    @bind="SelectedStatus">
+
+                <option value="All">
+                    All statuses
+                </option>
+
+                <option value="Open">
+                    Open
+                </option>
+
+                <option value="Resolved">
+                    Resolved
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label for="sortOrder">
+                Sort incidents
+            </label>
+
+            <select id="sortOrder"
+                    @bind="SelectedSort">
+
+                <option value="Priority">
+                    Highest priority first
+                </option>
+
+                <option value="Newest">
+                    Newest first
+                </option>
+
+                <option value="Oldest">
+                    Oldest first
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <p>
+            Showing
+            <strong>@FilteredIssues.Count()</strong>
+            of
+            <strong>@Issues.Count</strong>
+            incidents.
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         ISSUE REPORTING
+         ===================================================== -->
+
+    <section class="gateway-card">
+
+        <h2>Report an Issue</h2>
+
+        <p>
+            Add a new incident to the live engagement system.
+            Severity directly influences its attention priority.
+        </p>
+
+
+        <div>
+
+            <label for="issueTitle">
+                Issue Title
+            </label>
+
+            <input id="issueTitle"
+                   @bind="NewIssueTitle"
+                   placeholder="Enter issue title" />
+
+        </div>
+
+
+        <div>
+
+            <label for="issueDescription">
+                Description
+            </label>
+
+            <textarea id="issueDescription"
+                      @bind="NewIssueDescription"
+                          placeholder="Describe the issue">
+            </textarea>
+
+            </div>
+
+
+            <div>
+
+                <label for="issueSeverity">
+                    Severity
+                </label>
+
+                <select id="issueSeverity"
+                        @bind="NewIssueSeverity">
+
+                    <option value="Info">
+                        Info
+                    </option>
+
+                    <option value="Warning">
+                        Warning
+                    </option>
+
+                    <option value="Critical">
+                        Critical
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button class="gateway-button"
+                    @onclick="ReportIssueAsync"
+                    disabled="@IsReportingIssue">
+
+                @(IsReportingIssue
+                    ? "Reporting..."
+                    : "Report Issue")
+
+            </button>
+
+        </section>
+
+
+        <!-- =====================================================
+         LIVE INCIDENT BOARD
+         ===================================================== -->
+
+        <section class="gateway-card">
+
+            <h2>Live Incident Board</h2>
+
+            @if (IsLoadingIssues)
+            {
+                <p>
+                    Refreshing incident activity...
+                </p>
+            }
+            else if (!FilteredIssues.Any())
+            {
+                <p>
+                    No incidents match the current filters.
+                </p>
+            }
+            else
+            {
+                <div class="issue-list">
+
+                    @foreach (var issue in FilteredIssues)
+                    {
+                        <article class="issue-item">
+
+                            <h3>
+                                @issue.Title
+                            </h3>
+
+                            <p>
+                                @issue.Description
+                            </p>
+
+                            <p>
+                                <strong>Severity:</strong>
+                                @issue.Severity
+                            </p>
+
+                            <p>
+                                <strong>Status:</strong>
+                                @issue.Status
+                            </p>
+
+                            <p>
+                                <strong>Reported:</strong>
+                                @issue.ReportedAtUtc.ToLocalTime()
+                            </p>
+
+                            @if (issue.Status.Equals(
+                                "Open",
+                                StringComparison.OrdinalIgnoreCase))
+                            {
+                                <button class="gateway-button"
+                                        @onclick="() => ResolveIssueAsync(issue.Id)"
+                                        disabled="@IsResolvingIssue">
+
+                                    @(IsResolvingIssue
+                                        ? "Resolving..."
+                                        : "Resolve Issue")
+
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="disabled-button">
+                                    Resolved
+                                </span>
+                            }
+
+                        </article>
+                    }
+
+                </div>
+            }
+
+        </section>
+
+
+        <!-- =====================================================
+         RECENT ACTIVITY
+         ===================================================== -->
+        @if (EngagementSnapshot is not null)
+        {
+            <section class="gateway-card">
+
+                <h2>Recent Engagement Activity</h2>
+
+                <p>
+                    Recent incident activity provides immediate feedback
+                    on how the system state is changing.
+                </p>
+
+                @if (!EngagementSnapshot.RecentActivity.Any())
+                {
+                    <p>
+                        No recent activity.
+                    </p>
+                }
+                else
+                {
+                    <div class="issue-list">
+
+                        @foreach (var issue in EngagementSnapshot.RecentActivity)
+                        {
+                            <article class="issue-item">
+
+                                <h3>
+                                    @issue.Title
+                                </h3>
+
+                                <p>
+                                    <strong>Severity:</strong>
+                                    @issue.Severity
+                                </p>
+
+                                <p>
+                                    <strong>Status:</strong>
+                                    @issue.Status
+                                </p>
+
+                                <p>
+                                    @issue.ReportedAtUtc.ToLocalTime()
+                                </p>
+
+                            </article>
+                        }
+
+                    </div>
+                }
+
+            </section>
+        }
+
+
+        <!-- =====================================================
+         SYSTEM FEEDBACK
+         ===================================================== -->
+        @if (!string.IsNullOrWhiteSpace(DashboardMessage))
+        {
+            <section class="gateway-card active">
+
+                <h2>System Feedback</h2>
+
+                <p class="@DashboardMessageCssClass">
+                    @DashboardMessage
+                </p>
+
+            </section>
+        }
+
+
+        <!-- =====================================================
+         MAIN GATEWAY FEATURES
+         ===================================================== -->
+
+        <section class="gateway-grid">
+
+            <article class="gateway-card active">
+
+                <div class="card-icon">SD</div>
+
+                <h3>Sensor Data Ingestion</h3>
+
+                <p>
+                    Register sensors and submit telemetry data
+                    through the Smart-X gateway.
+                </p>
+
+                <a href="/sensors"
+                       class="gateway-button">
+
+                    Open Sensor Data
+
+                </a>
+
+            </article>
+
+
+            <article class="gateway-card disabled">
+
+                <div class="card-icon">CS</div>
+
+                <h3>Command Stream / History</h3>
+
+                <p>
+                    Command streaming and historical command
+                    management will be available in a later stage.
+                </p>
+
+                <span class="disabled-button">
+                    Coming Later
+                </span>
+
+            </article>
+
+
+            <article class="gateway-card disabled">
+
+                <div class="card-icon">NT</div>
+
+                <h3>Network Topology / Mesh Routing</h3>
+
+                <p>
+                    Network topology and mesh-routing capabilities
+                    will be available in a later stage.
+                </p>
+
+                <span class="disabled-button">
+                    Coming Later
+                </span>
+
+            </article>
+
+        </section>
+
+    </main>
+
+
+@code {
+
+    // =========================================================
+    // GATEWAY STATE
+    // =========================================================
+
+    private bool IsChecking;
+
+    private bool GatewayOnline;
+
+    private string GatewayStatus =
+        "Gateway Status Unknown";
+
+    private string? ConnectionMessage;
+
+    private string ConnectionCssClass =
+        string.Empty;
+
+
+    // =========================================================
+    // ENGAGEMENT STATE
+    // =========================================================
+
+    private DashboardEngagementSnapshot? EngagementSnapshot;
+
+    private List<UserIssue> Issues =
+        new();
+
+    private bool IsLoadingEngagement;
+
+    private bool IsLoadingIssues;
+
+    private bool IsReportingIssue;
+
+    private bool IsResolvingIssue;
+
+    private string? DashboardMessage;
+
+    private string DashboardMessageCssClass =
+        string.Empty;
+
+
+    // =========================================================
+    // INTERACTIVE FILTER STATE
+    // =========================================================
+
+    private string SearchText =
+        string.Empty;
+
+    private string SelectedSeverity =
+        "All";
+
+    private string SelectedStatus =
+        "All";
+
+    private string SelectedSort =
+        "Priority";
+
+
+    // =========================================================
+    // ISSUE FORM
+    // =========================================================
+
+    private string NewIssueTitle =
+        string.Empty;
+
+    private string NewIssueDescription =
+        string.Empty;
+
+    private string NewIssueSeverity =
+        "Info";
+
+
+    // =========================================================
+    // LIVE REFRESH
+    // =========================================================
+
+    private PeriodicTimer? _refreshTimer;
+
+    private CancellationTokenSource?
+        _refreshCancellation;
+
+
+    // =========================================================
+    // FILTERED INCIDENTS
+    // =========================================================
+
+    private IEnumerable<UserIssue> FilteredIssues
+    {
+        get
+        {
+            IEnumerable<UserIssue> result =
+                Issues;
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var search =
+                    SearchText.Trim();
+
+                result =
+                    result.Where(x =>
+                        x.Title.Contains(
+                            search,
+                            StringComparison.OrdinalIgnoreCase) ||
+                        x.Description.Contains(
+                            search,
+                            StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            if (!SelectedSeverity.Equals(
+                    "All",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                result =
+                    result.Where(x =>
+                        x.Severity.Equals(
+                            SelectedSeverity,
+                            StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            if (!SelectedStatus.Equals(
+                    "All",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                result =
+                    result.Where(x =>
+                        x.Status.Equals(
+                            SelectedStatus,
+                            StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            result =
+                SelectedSort switch
+                {
+                    "Newest" =>
+                        result.OrderByDescending(
+                            x => x.ReportedAtUtc),
+
+                    "Oldest" =>
+                        result.OrderBy(
+                            x => x.ReportedAtUtc),
+
+                    _ =>
+                        result
+                            .OrderByDescending(
+                                x => GetSeverityPriority(
+                                    x.Severity))
+                            .ThenByDescending(
+                                x => x.Status.Equals(
+                                    "Open",
+                                    StringComparison.OrdinalIgnoreCase))
+                            .ThenByDescending(
+                                x => x.ReportedAtUtc)
+                };
+
+            return result;
+        }
+    }
+
+
+    private static int GetSeverityPriority(
+        string? severity)
+    {
+        return severity?.ToLowerInvariant() switch
+        {
+            "critical" => 3,
+            "warning" => 2,
+            "info" => 1,
+            _ => 0
+        };
+    }
+
+
+    // =========================================================
+    // INITIALISE
+    // =========================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckGatewayAsync();
+
+        StartLiveRefresh();
+    }
+
+
+    // =========================================================
+    // GATEWAY CONNECTION
+    // =========================================================
+
+    private async Task CheckGatewayAsync()
+    {
+        if (IsChecking)
+        {
+            return;
+        }
+
+        IsChecking = true;
+
+        ConnectionMessage = null;
+
+        ConnectionCssClass =
+            string.Empty;
+
+        GatewayStatus =
+            "Checking Gateway...";
+
+        try
+        {
+            var httpClient =
+                HttpClientFactory.CreateClient(
+                    "SmartXApi");
+
+            using var response =
+                await httpClient.GetAsync(
+                    "",
+                    HttpCompletionOption.ResponseHeadersRead);
+
+            if (response.IsSuccessStatusCode)
+            {
+                GatewayOnline = true;
+
+                GatewayStatus =
+                    "Gateway Online";
+
+                ConnectionMessage =
+                    "Successfully connected to the Smart-X API.";
+
+                ConnectionCssClass =
+                    "connection-success";
+
+                await LoadEngagementAsync();
+            }
+            else
+            {
+                GatewayOnline = false;
+
+                GatewayStatus =
+                    "Gateway Error";
+
+                ConnectionMessage =
+                    $"The Smart-X API returned HTTP {(int)response.StatusCode}.";
+
+                ConnectionCssClass =
+                    "connection-error";
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            GatewayOnline = false;
+
+            GatewayStatus =
+                "Gateway Timeout";
+
+            ConnectionMessage =
+                "The Smart-X API did not respond within the configured timeout.";
+
+            ConnectionCssClass =
+                "connection-error";
+        }
+        catch (HttpRequestException)
+        {
+            GatewayOnline = false;
+
+            GatewayStatus =
+                "Gateway Offline";
+
+            ConnectionMessage =
+                "Unable to connect to the Smart-X API.";
+
+            ConnectionCssClass =
+                "connection-error";
+        }
+        catch (Exception ex)
+        {
+            GatewayOnline = false;
+
+            GatewayStatus =
+                "Gateway Error";
+
+            ConnectionMessage =
+                $"Unexpected gateway error: {ex.Message}";
+
+            ConnectionCssClass =
+                "connection-error";
+        }
+        finally
+        {
+            IsChecking = false;
+        }
+    }
+
+
+    // =========================================================
+    // LOAD ENGAGEMENT SNAPSHOT
+    // =========================================================
+
+    private async Task LoadEngagementAsync()
+    {
+        if (IsLoadingEngagement)
+        {
+            return;
+        }
+
+        IsLoadingEngagement = true;
+
+        try
+        {
+            var httpClient =
+                HttpClientFactory.CreateClient(
+                    "SmartXApi");
+
+            var snapshot =
+                await httpClient.GetFromJsonAsync<
+                    DashboardEngagementSnapshot>(
+                    "api/dashboard/engagement");
+
+            if (snapshot is not null)
+            {
+                EngagementSnapshot =
+                    snapshot;
+
+                Issues =
+                    snapshot.RecentActivity
+                        .Concat(snapshot.PriorityIssues)
+                        .GroupBy(x => x.Id)
+                        .Select(x => x.First())
+                        .OrderByDescending(
+                            x => x.ReportedAtUtc)
+                        .ToList();
+            }
+
+            DashboardMessage = null;
+        }
+        catch (HttpRequestException)
+        {
+            DashboardMessage =
+                "Unable to refresh dashboard engagement data.";
+
+            DashboardMessageCssClass =
+                "connection-error";
+        }
+        catch (Exception ex)
+        {
+            DashboardMessage =
+                $"Dashboard engagement error: {ex.Message}";
+
+            DashboardMessageCssClass =
+                "connection-error";
+        }
+        finally
+        {
+            IsLoadingEngagement = false;
+        }
+    }
+
+
+    // =========================================================
+    // REPORT ISSUE
+    // =========================================================
+
+    private async Task ReportIssueAsync()
+    {
+        DashboardMessage = null;
+
+        if (string.IsNullOrWhiteSpace(NewIssueTitle))
+        {
+            DashboardMessage =
+                "Issue title is required.";
+
+            DashboardMessageCssClass =
+                "connection-error";
+
+            return;
+        }
+
+
+        if (string.IsNullOrWhiteSpace(
+            NewIssueDescription))
+        {
+            DashboardMessage =
+                "Issue description is required.";
+
+            DashboardMessageCssClass =
+                "connection-error";
+
+            return;
+        }
+
+
+        IsReportingIssue = true;
+
+        try
+        {
+            var httpClient =
+                HttpClientFactory.CreateClient(
+                    "SmartXApi");
+
+            var issue = new UserIssue
+            {
+                Title =
+                    NewIssueTitle.Trim(),
+
+                Description =
+                    NewIssueDescription.Trim(),
+
+                Severity =
+                    NewIssueSeverity,
+
+                Status =
+                    "Open"
+            };
+
+
+            var response =
+                await httpClient.PostAsJsonAsync(
+                    "api/dashboard/issues",
+                    issue);
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                NewIssueTitle =
+                    string.Empty;
+
+                NewIssueDescription =
+                    string.Empty;
+
+                NewIssueSeverity =
+                    "Info";
+
+                DashboardMessage =
+                    "Incident added to the live engagement system.";
+
+                DashboardMessageCssClass =
+                    "connection-success";
+
+                await LoadEngagementAsync();
+            }
+            else
+            {
+                DashboardMessage =
+                    $"Issue could not be reported. HTTP {(int)response.StatusCode}.";
+
+                DashboardMessageCssClass =
+                    "connection-error";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            DashboardMessage =
+                "Unable to connect to the Smart-X API.";
+
+            DashboardMessageCssClass =
+                "connection-error";
+        }
+        finally
+        {
+            IsReportingIssue = false;
+        }
+    }
+
+
+    // =========================================================
+    // RESOLVE ISSUE
+    // =========================================================
+
+    private async Task ResolveIssueAsync(
+        Guid issueId)
+    {
+        if (IsResolvingIssue)
+        {
+            return;
+        }
+
+        IsResolvingIssue = true;
+
+        DashboardMessage = null;
+
+        try
+        {
+            var httpClient =
+                HttpClientFactory.CreateClient(
+                    "SmartXApi");
+
+            var response =
+                await httpClient.PutAsync(
+                    $"api/dashboard/issues/{issueId}/resolve",
+                    null);
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                DashboardMessage =
+                    "Incident resolved and engagement priorities updated.";
+
+                DashboardMessageCssClass =
+                    "connection-success";
+
+                await LoadEngagementAsync();
+            }
+            else
+            {
+                DashboardMessage =
+                    $"Issue could not be resolved. HTTP {(int)response.StatusCode}.";
+
+                DashboardMessageCssClass =
+                    "connection-error";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            DashboardMessage =
+                "Unable to connect to the Smart-X API.";
+
+            DashboardMessageCssClass =
+                "connection-error";
+        }
+        finally
+        {
+            IsResolvingIssue = false;
+        }
+    }
+
+
+    // =========================================================
+    // PERIODIC LIVE ENGAGEMENT REFRESH
+    // =========================================================
+
+    private void StartLiveRefresh()
+    {
+        _refreshCancellation =
+            new CancellationTokenSource();
+
+        _refreshTimer =
+            new PeriodicTimer(
+                TimeSpan.FromSeconds(10));
+
+        _ = RefreshLoopAsync(
+            _refreshCancellation.Token);
+    }
+
+
+    private async Task RefreshLoopAsync(
+        CancellationToken cancellationToken)
+    {
+        if (_refreshTimer is null)
+        {
+            return;
+        }
+
+        try
+        {
+            while (await _refreshTimer
+                .WaitForNextTickAsync(
+                    cancellationToken))
+            {
+                if (!GatewayOnline)
+                {
+                    continue;
+                }
+
+                await InvokeAsync(
+                    async () =>
+                    {
+                        await LoadEngagementAsync();
+
+                        StateHasChanged();
+                    });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected during component disposal.
+        }
+    }
+
+
+    // =========================================================
+    // DISPOSE
+    // =========================================================
+
+    public void Dispose()
+    {
+        try
+        {
+            _refreshCancellation?.Cancel();
+        }
+        catch
+        {
+            // Disposal should never throw.
+        }
+
+        _refreshTimer?.Dispose();
+
+        _refreshCancellation?.Dispose();
+    }
+}

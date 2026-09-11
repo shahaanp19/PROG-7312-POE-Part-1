@@ -1,0 +1,89 @@
+﻿@inherits LayoutComponentBase
+
+<div class="app-shell">
+
+    <header class="app-topbar">
+
+        <div class="app-brand">
+
+            <span class="app-brand-mark"
+                  aria-hidden="true">
+                SX
+            </span>
+
+            <div>
+                <span class="app-brand-name">
+                    SMART-X
+                </span>
+
+                <span class="app-brand-subtitle">
+                    IoT Gateway
+                </span>
+            </div>
+
+        </div>
+
+        <div class="app-topbar-status"
+             aria-label="Application status">
+
+            <span class="app-live-dot"
+                  aria-hidden="true">
+            </span>
+
+            <span>
+                System interface
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <main class="app-main"
+          id="main-content">
+
+        @Body
+
+    </main>
+
+
+    <footer class="app-footer">
+
+        <span>
+            Smart-X IoT Gateway
+        </span>
+
+        <span aria-hidden="true">
+            •
+        </span>
+
+        <span>
+            Telemetry &amp; sensor management
+        </span>
+
+    </footer>
+
+</div>
+
+
+<div id="blazor-error-ui"
+     data-nosnippet
+     role="alert"
+     aria-live="assertive">
+
+    <span>
+        An unexpected application error occurred.
+    </span>
+
+    <a href="."
+           class="reload">
+        Reload application
+    </a>
+
+    <button type="button"
+            class="dismiss"
+            aria-label="Dismiss error">
+        ×
+    </button>
+
+</div>

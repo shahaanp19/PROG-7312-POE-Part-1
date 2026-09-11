@@ -1,0 +1,716 @@
+/* =========================================================
+   SMART-X UI SYSTEM
+   Section 7 — User Interface Design Considerations
+   ========================================================= */
+
+:root {
+    --sx-bg: #f4f7fb;
+    --sx-surface: #ffffff;
+    --sx-surface-soft: #f8fafc;
+    --sx-border: #dfe6ee;
+    --sx-border-strong: #cbd5e1;
+    --sx-text: #172033;
+    --sx-text-soft: #5f6b7a;
+    --sx-text-muted: #7b8796;
+    --sx-primary: #0b5ed7;
+    --sx-primary-dark: #084298;
+    --sx-success: #16803c;
+    --sx-danger: #c62828;
+    --sx-warning: #a15c00;
+    --sx-shadow-sm: 0 2px 8px rgba(15, 23, 42, .06);
+    --sx-shadow-md: 0 10px 30px rgba(15, 23, 42, .08);
+    --sx-radius: 14px;
+    --sx-radius-sm: 10px;
+    --sx-content-width: 1200px;
+    --sx-focus: 0 0 0 3px rgba(11, 94, 215, .22);
+}
+
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--sx-bg);
+    color: var(--sx-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+/* =========================================================
+   APPLICATION SHELL
+   ========================================================= */
+
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .75rem clamp(1rem, 3vw, 2rem);
+    background: rgba(255, 255, 255, .96);
+    border-bottom: 1px solid var(--sx-border);
+    box-shadow: 0 1px 8px rgba(15, 23, 42, .04);
+    backdrop-filter: blur(12px);
+}
+
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-width: 0;
+}
+
+
+.app-brand-mark {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--sx-primary);
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+}
+
+
+.app-brand-name,
+.app-brand-subtitle {
+    display: block;
+}
+
+
+.app-brand-name {
+    font-size: .9rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+}
+
+
+.app-brand-subtitle {
+    color: var(--sx-text-muted);
+    font-size: .74rem;
+    font-weight: 600;
+}
+
+
+.app-topbar-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--sx-text-soft);
+    font-size: .82rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+.app-live-dot,
+.status-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+    background: var(--sx-success);
+    box-shadow: 0 0 0 4px rgba(22, 128, 60, .10);
+}
+
+
+.app-main {
+    width: 100%;
+    flex: 1 0 auto;
+    padding: clamp(1rem, 3vw, 2rem) 1rem 3rem;
+}
+
+
+    .app-main > * {
+        width: min( 100%, var(--sx-content-width) );
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+
+.app-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+    padding: 1.25rem 1rem;
+    color: var(--sx-text-muted);
+    background: var(--sx-surface);
+    border-top: 1px solid var(--sx-border);
+    font-size: .78rem;
+}
+
+
+/* =========================================================
+   GATEWAY HEADER
+   ========================================================= */
+
+.gateway-header {
+    width: min( 100%, var(--sx-content-width) );
+    margin: 0 auto 1.25rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: var(--sx-surface);
+    border: 1px solid var(--sx-border);
+    border-radius: var(--sx-radius);
+    box-shadow: var(--sx-shadow-sm);
+}
+
+
+.gateway-label {
+    display: inline-block;
+    margin-bottom: .35rem;
+    color: var(--sx-primary);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+}
+
+
+.gateway-header h1 {
+    margin: 0;
+    font-size: clamp( 1.55rem, 3vw, 2.35rem );
+    line-height: 1.15;
+    letter-spacing: -.025em;
+}
+
+
+.gateway-header p {
+    margin: .45rem 0 0;
+    color: var(--sx-text-soft);
+    font-size: .95rem;
+}
+
+
+.gateway-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 40px;
+    padding: .55rem .8rem;
+    border: 1px solid var(--sx-border);
+    border-radius: 999px;
+    background: var(--sx-surface-soft);
+    color: var(--sx-text-soft);
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+.status-dot.online {
+    background: var(--sx-success);
+}
+
+
+.status-dot.offline {
+    background: var(--sx-danger);
+}
+
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.gateway-content {
+    width: min( 100%, var(--sx-content-width) );
+    margin: 0 auto;
+}
+
+
+.welcome-section,
+.gateway-card {
+    margin-bottom: 1rem;
+    padding: clamp( 1rem, 2.5vw, 1.5rem );
+    background: var(--sx-surface);
+    border: 1px solid var(--sx-border);
+    border-radius: var(--sx-radius);
+    box-shadow: var(--sx-shadow-sm);
+}
+
+
+.welcome-section {
+    border-left: 4px solid var(--sx-primary);
+}
+
+
+.gateway-card.active {
+    border-color: rgba(11, 94, 215, .24);
+}
+
+
+.gateway-card.disabled {
+    opacity: .72;
+    background: var(--sx-surface-soft);
+}
+
+
+.gateway-card h2,
+.welcome-section h2 {
+    margin-top: 0;
+    margin-bottom: .55rem;
+    font-size: clamp( 1.05rem, 2vw, 1.35rem );
+}
+
+
+.gateway-card h3 {
+    margin-top: 0;
+    margin-bottom: .45rem;
+    font-size: 1rem;
+}
+
+
+.gateway-card p,
+.welcome-section p {
+    color: var(--sx-text-soft);
+}
+
+
+.card-icon {
+    width: 42px;
+    height: 42px;
+    margin-bottom: .8rem;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #eaf2ff;
+    color: var(--sx-primary-dark);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+}
+
+
+/* =========================================================
+   RESPONSIVE GRID
+   ========================================================= */
+
+.gateway-grid {
+    display: grid;
+    grid-template-columns: repeat( 3, minmax(0, 1fr) );
+    gap: 1rem;
+}
+
+
+    .gateway-grid .gateway-card {
+        min-width: 0;
+    }
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.gateway-button,
+button.gateway-button {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .65rem 1rem;
+    border: 1px solid var(--sx-primary);
+    border-radius: var(--sx-radius-sm);
+    background: var(--sx-primary);
+    color: #fff;
+    font-weight: 750;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+
+    .gateway-button:hover {
+        background: var(--sx-primary-dark);
+        border-color: var(--sx-primary-dark);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+
+    .gateway-button:active {
+        transform: translateY(0);
+    }
+
+
+    .gateway-button:disabled,
+    button:disabled.gateway-button {
+        opacity: .58;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+
+.disabled-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: .65rem 1rem;
+    border: 1px solid var(--sx-border-strong);
+    border-radius: var(--sx-radius-sm);
+    color: var(--sx-text-muted);
+    background: #eef2f6;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+.gateway-card label {
+    display: block;
+    margin: 0 0 .35rem;
+    color: var(--sx-text);
+    font-size: .85rem;
+    font-weight: 750;
+}
+
+
+.gateway-card input,
+.gateway-card select,
+.gateway-card textarea {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: .9rem;
+    padding: .72rem .8rem;
+    border: 1px solid var(--sx-border-strong);
+    border-radius: var(--sx-radius-sm);
+    background: #fff;
+    color: var(--sx-text);
+    outline: none;
+}
+
+
+.gateway-card textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+
+    .gateway-card input::placeholder,
+    .gateway-card textarea::placeholder {
+        color: #8a96a5;
+    }
+
+
+    .gateway-card input:focus,
+    .gateway-card select:focus,
+    .gateway-card textarea:focus {
+        border-color: var(--sx-primary);
+        box-shadow: var(--sx-focus);
+    }
+
+
+/* =========================================================
+   INCIDENT BOARD
+   ========================================================= */
+
+.issue-list {
+    display: grid;
+    gap: .8rem;
+}
+
+
+.issue-item {
+    padding: 1rem;
+    background: var(--sx-surface-soft);
+    border: 1px solid var(--sx-border);
+    border-left: 4px solid var(--sx-border-strong);
+    border-radius: var(--sx-radius-sm);
+}
+
+
+    .issue-item h3 {
+        margin-bottom: .35rem;
+    }
+
+
+    .issue-item p {
+        margin: .3rem 0;
+    }
+
+
+    .issue-item strong {
+        color: var(--sx-text);
+    }
+
+
+/* =========================================================
+   FEEDBACK
+   ========================================================= */
+
+.connection-success,
+.connection-error {
+    margin-top: .75rem;
+    padding: .75rem .9rem;
+    border-radius: var(--sx-radius-sm);
+    font-weight: 650;
+}
+
+
+.connection-success {
+    border: 1px solid rgba(22, 128, 60, .2);
+    background: #eefaf2;
+    color: #12632f;
+}
+
+
+.connection-error {
+    border: 1px solid rgba(198, 40, 40, .2);
+    background: #fff0f0;
+    color: #9f1f1f;
+}
+
+
+/* =========================================================
+   BLAZOR ERROR UI
+   ========================================================= */
+
+#blazor-error-ui {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .9rem 1rem;
+    color: #fff;
+    background: #9f1f1f;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 12px;
+    box-shadow: var(--sx-shadow-md);
+}
+
+
+    #blazor-error-ui .reload {
+        color: #fff;
+        font-weight: 800;
+    }
+
+
+    #blazor-error-ui .dismiss {
+        min-width: 36px;
+        min-height: 36px;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .12);
+        color: #fff;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+
+.blazor-error-boundary {
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: #fff;
+    background: #b32121;
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+:focus-visible {
+    outline: 3px solid rgba(11, 94, 215, .35);
+    outline-offset: 2px;
+}
+
+
+a {
+    color: var(--sx-primary-dark);
+}
+
+
+    a:hover {
+        color: var(--sx-primary);
+    }
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .gateway-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .gateway-status {
+        align-self: flex-start;
+    }
+
+    .gateway-grid {
+        grid-template-columns: repeat( 2, minmax(0, 1fr) );
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+
+    html {
+        font-size: 15px;
+    }
+
+    .app-topbar {
+        min-height: 60px;
+        padding: .65rem .8rem;
+    }
+
+    .app-topbar-status {
+        display: none;
+    }
+
+    .app-brand-mark {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+    }
+
+    .app-main {
+        padding: .75rem .65rem 2rem;
+    }
+
+    .gateway-header {
+        width: 100%;
+        margin-top: .25rem;
+        padding: 1rem;
+    }
+
+        .gateway-header h1 {
+            font-size: 1.45rem;
+        }
+
+        .gateway-header p {
+            font-size: .88rem;
+        }
+
+    .gateway-status {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .gateway-grid {
+        grid-template-columns: 1fr;
+        gap: .75rem;
+    }
+
+    .welcome-section,
+    .gateway-card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    .gateway-button,
+    button.gateway-button,
+    .disabled-button {
+        width: 100%;
+    }
+
+    .gateway-card input,
+    .gateway-card select,
+    .gateway-card textarea {
+        font-size: 16px;
+    }
+
+    .app-footer {
+        text-align: center;
+        font-size: .72rem;
+    }
+
+    #blazor-error-ui {
+        left: .6rem;
+        right: .6rem;
+        bottom: .6rem;
+        flex-wrap: wrap;
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
