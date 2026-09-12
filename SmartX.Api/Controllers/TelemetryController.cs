@@ -155,10 +155,6 @@ public class TelemetryController : ControllerBase
         return Ok(result);
     }
 
-    // ---------------------------------------------------------
-    // SECTION 3
-    // GENERICS & OPERATOR OVERLOADING
-    // ---------------------------------------------------------
 
     [HttpGet("generic-demo")]
     public IActionResult GenericDemo()
@@ -232,10 +228,6 @@ public class TelemetryController : ControllerBase
         });
     }
 
-    // ---------------------------------------------------------
-    // SECTION 4
-    // RECURSIVE DEPLOYMENT VALIDATION
-    // ---------------------------------------------------------
 
     [HttpGet("recursive-validation-demo")]
     public IActionResult RecursiveValidationDemo()
@@ -566,3 +558,9 @@ public class TelemetryController : ControllerBase
         });
     }
 }
+
+//References
+//tdykstra (2024). Create web APIs with ASP.NET Core. [online] Microsoft.com. Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-10.0 [Accessed 12 Sept. 2026].
+//wadepickett (2025). Tutorial: Create a controller-based web API with ASP.NET Core. [online] Microsoft.com. Available at: https://learn.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-10.0&tabs=visual-studio [Accessed 12 Sept. 2026].
+//tdykstra (2025). Model validation in ASP.NET Core MVC. [online] Microsoft.com. Available at: https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation?view=aspnetcore-10.0 [Accessed 12 Sept. 2026].
+//tdykstra (2024). Dependency injection in ASP.NET Core. [online] Microsoft.com. Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0 [Accessed 12 Sept. 2026].
