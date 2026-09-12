@@ -11,7 +11,7 @@ public class SensorRegistrationRequest
         ErrorMessage = "Sensor name must be between 2 and 100 characters.")]
     public string Name { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Device MAC address / unique identifier is required.")]
+    [Required(ErrorMessage = "Sensor MAC address / unique identifier is required.")]
     [StringLength(
         100,
         MinimumLength = 2,

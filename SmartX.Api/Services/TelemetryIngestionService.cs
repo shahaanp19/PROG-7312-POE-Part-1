@@ -9,9 +9,13 @@ public class TelemetryIngestionService
 {
     private readonly TelemetryValidator _validator;
 
-    public TelemetryIngestionService(TelemetryValidator validator)
+    public TelemetryIngestionService(
+        TelemetryValidator validator)
     {
-        _validator = validator;
+        _validator =
+            validator ??
+            throw new ArgumentNullException(
+                nameof(validator));
     }
 
     public TelemetryIngestionResult Process(
@@ -22,7 +26,8 @@ public class TelemetryIngestionService
 
         var stopwatch = Stopwatch.StartNew();
 
-        var validationResult = _validator.Validate(metric, value);
+        var validationResult =
+            _validator.Validate(metric, value);
 
         stopwatch.Stop();
 
@@ -31,11 +36,15 @@ public class TelemetryIngestionService
             Success = validationResult.IsValid,
             PacketId = Guid.NewGuid(),
             SensorDeviceId = metric.SensorDeviceId,
-            Message = validationResult.Message ?? string.Empty,
-            IsAnomaly = validationResult.IsAnomaly,
+            Message =
+                validationResult.Message ??
+                string.Empty,
+            IsAnomaly =
+                validationResult.IsAnomaly,
             ProcessingTimeMilliseconds =
                 stopwatch.Elapsed.TotalMilliseconds,
-            ProcessedAtUtc = DateTime.UtcNow
+            ProcessedAtUtc =
+                DateTime.UtcNow
         };
     }
 }

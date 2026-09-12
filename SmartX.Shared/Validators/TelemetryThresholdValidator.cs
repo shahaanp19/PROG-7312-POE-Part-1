@@ -4,10 +4,26 @@ namespace SmartX.Shared.Validators;
 
 public class TelemetryThresholdValidator
 {
+    public bool HasValidThresholdConfiguration(
+        TelemetryMetric metric)
+    {
+        ArgumentNullException.ThrowIfNull(metric);
+
+        return
+            double.IsFinite(metric.MinimumExpectedValue) &&
+            double.IsFinite(metric.MaximumExpectedValue) &&
+            double.IsFinite(metric.WarningThreshold) &&
+            double.IsFinite(metric.CriticalThreshold) &&
+            metric.MinimumExpectedValue <= metric.MaximumExpectedValue &&
+            metric.WarningThreshold <= metric.CriticalThreshold;
+    }
+
     public bool IsWithinExpectedRange(
         TelemetryMetric metric,
         double value)
     {
+        ArgumentNullException.ThrowIfNull(metric);
+
         return value >= metric.MinimumExpectedValue &&
                value <= metric.MaximumExpectedValue;
     }
@@ -16,6 +32,8 @@ public class TelemetryThresholdValidator
         TelemetryMetric metric,
         double value)
     {
+        ArgumentNullException.ThrowIfNull(metric);
+
         return value >= metric.WarningThreshold;
     }
 
@@ -23,6 +41,8 @@ public class TelemetryThresholdValidator
         TelemetryMetric metric,
         double value)
     {
+        ArgumentNullException.ThrowIfNull(metric);
+
         return value >= metric.CriticalThreshold;
     }
 
@@ -30,6 +50,8 @@ public class TelemetryThresholdValidator
         TelemetryMetric metric,
         double value)
     {
+        ArgumentNullException.ThrowIfNull(metric);
+
         return !IsWithinExpectedRange(metric, value);
     }
 }

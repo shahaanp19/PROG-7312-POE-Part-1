@@ -1,16 +1,21 @@
 ﻿@page "/sensors"
 @rendermode InteractiveServer
 
-@using System.Net.Http.Json
 @using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
 @using SmartX.Shared.DTOs
 
 @inject IHttpClientFactory HttpClientFactory
 
 <h1>Sensor Registration</h1>
 
-<EditForm Model="@form" OnValidSubmit="RegisterSensorAsync">
+<EditForm Model="@form"
+          OnValidSubmit="RegisterSensorAsync">
+
     <DataAnnotationsValidator />
+
+    <ValidationSummary />
 
     <div>
         <label for="name">Sensor Name</label>
@@ -36,12 +41,21 @@
         <InputSelect id="sensorType"
                      @bind-Value="form.SensorType">
 
-            <option value="">-- Select category --</option>
-            <option value="Environmental">Environmental</option>
+            <option value="">
+                -- Select category --
+            </option>
+
+            <option value="Environmental">
+                Environmental
+            </option>
+
             <option value="Power Consumption">
                 Power Consumption
             </option>
-            <option value="Actuator">Actuator</option>
+
+            <option value="Actuator">
+                Actuator
+            </option>
 
         </InputSelect>
 
@@ -49,7 +63,9 @@
     </div>
 
     <div>
-        <label for="location">Deployment Location</label>
+        <label for="location">
+            Deployment Location
+        </label>
 
         <InputText id="location"
                    @bind-Value="form.Location" />
@@ -58,7 +74,9 @@
     </div>
 
     <div>
-        <label for="description">Description</label>
+        <label for="description">
+            Description
+        </label>
 
         <InputTextArea id="description"
                        @bind-Value="form.Description" />
@@ -79,6 +97,7 @@
         @(isSubmitting
             ? "Registering..."
             : "Register Sensor")
+
     </button>
 
     <button type="button"
@@ -87,11 +106,15 @@
 
         Clear
     </button>
+
 </EditForm>
 
 @if (!string.IsNullOrWhiteSpace(statusMessage))
 {
-    <p>@statusMessage</p>
+    <p role="status"
+           aria-live="polite">
+        @statusMessage
+    </p>
 }
 
 @if (registeredSensor is not null)
@@ -197,7 +220,8 @@
 
                 <p>
                     <strong>Type:</strong>
-                    @(string.IsNullOrWhiteSpace(selectedFile.ContentType)
+                    @(string.IsNullOrWhiteSpace(
+                        selectedFile.ContentType)
                         ? "Unknown"
                         : selectedFile.ContentType)
                 </p>
@@ -216,18 +240,21 @@
             @(isUploading
                 ? "Uploading securely..."
                 : "Upload Attachment")
+
         </button>
 
         @if (isUploading)
         {
-            <p role="status">
+            <p role="status"
+                   aria-live="polite">
                 Upload in progress. Please wait...
             </p>
         }
 
         @if (!string.IsNullOrWhiteSpace(uploadMessage))
         {
-            <p role="status">
+            <p role="status"
+                   aria-live="polite">
                 @uploadMessage
             </p>
         }
@@ -236,7 +263,9 @@
         {
             <div>
 
-                <h3>Attachment Uploaded Successfully</h3>
+                <h3>
+                    Attachment Uploaded Successfully
+                </h3>
 
                 <p>
                     <strong>File:</strong>
@@ -274,27 +303,28 @@
 }
 
 @code {
-
     private const long MaximumFileSize =
         10 * 1024 * 1024;
 
-    private static readonly HashSet<string> AllowedExtensions =
-        new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".txt",
-            ".log",
-            ".json",
-            ".xml",
-            ".csv",
-            ".pdf"
-        };
+    private static readonly HashSet<string>
+        AllowedExtensions =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".txt",
+                ".log",
+                ".json",
+                ".xml",
+                ".csv",
+                ".pdf"
+            };
 
     private SensorFormModel form = new();
 
-    private SensorRegistrationResponse? registeredSensor;
+    private SensorRegistrationResponse?
+        registeredSensor;
 
     private bool isSubmitting;
 
@@ -304,14 +334,21 @@
 
     private bool isUploading;
 
-    private string attachmentType = "Configuration";
+    private string attachmentType =
+        "Configuration";
 
     private string? uploadMessage;
 
-    private SensorAttachmentResponse? uploadedAttachment;
+    private SensorAttachmentResponse?
+        uploadedAttachment;
 
     private async Task RegisterSensorAsync()
     {
+        if (isSubmitting)
+        {
+            return;
+        }
+
         isSubmitting = true;
         statusMessage = null;
         registeredSensor = null;
@@ -319,7 +356,8 @@
         try
         {
             var client =
-                HttpClientFactory.CreateClient("SmartXApi");
+                HttpClientFactory.CreateClient(
+                    "SmartXApi");
 
             var request =
                 new SensorRegistrationRequest
@@ -351,23 +389,37 @@
             {
                 registeredSensor =
                     await response.Content
-                        .ReadFromJsonAsync<SensorRegistrationResponse>();
+                        .ReadFromJsonAsync<
+                            SensorRegistrationResponse>();
 
                 statusMessage =
-                    "Sensor registered successfully.";
+                    registeredSensor is null
+                        ? "Sensor registration completed, but the API returned no sensor details."
+                        : "Sensor registered successfully.";
 
                 form = new SensorFormModel();
             }
             else
             {
+                var error =
+                    await response.Content
+                        .ReadAsStringAsync();
+
                 statusMessage =
-                    $"Registration failed. HTTP {(int)response.StatusCode}.";
+                    string.IsNullOrWhiteSpace(error)
+                        ? $"Registration failed. HTTP {(int)response.StatusCode}."
+                        : $"Registration failed. HTTP {(int)response.StatusCode}. {error}";
             }
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             statusMessage =
-                $"Unable to connect to the Smart-X API: {ex.Message}";
+                "Unable to connect to the Smart-X API.";
+        }
+        catch (TaskCanceledException)
+        {
+            statusMessage =
+                "The registration request timed out.";
         }
         catch (Exception ex)
         {
@@ -393,7 +445,6 @@
         {
             uploadMessage =
                 "Please select a file.";
-
             return;
         }
 
@@ -401,7 +452,6 @@
         {
             uploadMessage =
                 "The selected file is empty.";
-
             return;
         }
 
@@ -409,7 +459,6 @@
         {
             uploadMessage =
                 "The selected file exceeds the 10 MB limit.";
-
             return;
         }
 
@@ -420,7 +469,6 @@
         {
             uploadMessage =
                 $"File type '{extension}' is not supported.";
-
             return;
         }
 
@@ -449,7 +497,6 @@
             {
                 uploadMessage =
                     "The selected file is empty.";
-
                 return;
             }
 
@@ -457,7 +504,6 @@
             {
                 uploadMessage =
                     "The selected file exceeds the 10 MB limit.";
-
                 return;
             }
 
@@ -468,7 +514,6 @@
             {
                 uploadMessage =
                     $"File type '{extension}' is not supported.";
-
                 return;
             }
 
@@ -477,17 +522,19 @@
 
             await using var stream =
                 selectedFile.OpenReadStream(
-                    maxAllowedSize: MaximumFileSize);
+                    maxAllowedSize:
+                        MaximumFileSize);
 
             using var streamContent =
                 new StreamContent(stream);
 
             streamContent.Headers.ContentType =
-                new System.Net.Http.Headers.MediaTypeHeaderValue(
-                    string.IsNullOrWhiteSpace(
-                        selectedFile.ContentType)
-                        ? "application/octet-stream"
-                        : selectedFile.ContentType);
+                new System.Net.Http.Headers
+                    .MediaTypeHeaderValue(
+                        string.IsNullOrWhiteSpace(
+                            selectedFile.ContentType)
+                            ? "application/octet-stream"
+                            : selectedFile.ContentType);
 
             content.Add(
                 streamContent,
@@ -499,7 +546,8 @@
                 "attachmentType");
 
             var client =
-                HttpClientFactory.CreateClient("SmartXApi");
+                HttpClientFactory.CreateClient(
+                    "SmartXApi");
 
             var response =
                 await client.PostAsync(
@@ -510,10 +558,13 @@
             {
                 uploadedAttachment =
                     await response.Content
-                        .ReadFromJsonAsync<SensorAttachmentResponse>();
+                        .ReadFromJsonAsync<
+                            SensorAttachmentResponse>();
 
                 uploadMessage =
-                    "Attachment uploaded and encrypted successfully.";
+                    uploadedAttachment is null
+                        ? "Upload completed, but no attachment details were returned."
+                        : "Attachment uploaded and encrypted successfully.";
 
                 selectedFile = null;
             }
@@ -524,18 +575,25 @@
                         .ReadAsStringAsync();
 
                 uploadMessage =
-                    $"Upload failed. HTTP {(int)response.StatusCode}. {error}";
+                    string.IsNullOrWhiteSpace(error)
+                        ? $"Upload failed. HTTP {(int)response.StatusCode}."
+                        : $"Upload failed. HTTP {(int)response.StatusCode}. {error}";
             }
         }
-        catch (IOException ex)
+        catch (IOException)
         {
             uploadMessage =
-                $"File could not be read: {ex.Message}";
+                "The selected file could not be read.";
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             uploadMessage =
-                $"Unable to connect to the Smart-X API: {ex.Message}";
+                "Unable to connect to the Smart-X API.";
+        }
+        catch (TaskCanceledException)
+        {
+            uploadMessage =
+                "The upload request timed out.";
         }
         catch (Exception ex)
         {
@@ -553,19 +611,15 @@
         form = new SensorFormModel();
 
         registeredSensor = null;
-
         statusMessage = null;
-
         selectedFile = null;
-
         uploadMessage = null;
-
         uploadedAttachment = null;
-
         attachmentType = "Configuration";
     }
 
-    private static string FormatFileSize(long bytes)
+    private static string FormatFileSize(
+        long bytes)
     {
         if (bytes < 1024)
         {
@@ -583,25 +637,45 @@
     private sealed class SensorFormModel
     {
         [Required(
-            ErrorMessage = "Sensor name is required.")]
-        [StringLength(100)]
+            ErrorMessage =
+                "Sensor name is required.")]
+        [StringLength(
+            100,
+            MinimumLength = 2,
+            ErrorMessage =
+                "Sensor name must be between 2 and 100 characters.")]
         public string Name { get; set; } =
             string.Empty;
 
         [Required(
-            ErrorMessage = "Device identifier is required.")]
-        [StringLength(100)]
+            ErrorMessage =
+                "Device identifier is required.")]
+        [StringLength(
+            100,
+            MinimumLength = 2,
+            ErrorMessage =
+                "Device identifier must be between 2 and 100 characters.")]
         public string DeviceIdentifier { get; set; } =
             string.Empty;
 
         [Required(
-            ErrorMessage = "Sensor category is required.")]
+            ErrorMessage =
+                "Sensor category is required.")]
+        [RegularExpression(
+            "^(Environmental|Power Consumption|Actuator)$",
+            ErrorMessage =
+                "Please select a valid sensor category.")]
         public string SensorType { get; set; } =
             string.Empty;
 
         [Required(
-            ErrorMessage = "Deployment location is required.")]
-        [StringLength(100)]
+            ErrorMessage =
+                "Deployment location is required.")]
+        [StringLength(
+            100,
+            MinimumLength = 2,
+            ErrorMessage =
+                "Deployment location must be between 2 and 100 characters.")]
         public string Location { get; set; } =
             string.Empty;
 

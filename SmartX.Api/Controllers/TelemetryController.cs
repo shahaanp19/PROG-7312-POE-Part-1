@@ -11,18 +11,17 @@ public class TelemetryController : ControllerBase
 {
     private readonly TelemetryIngestionService _ingestionService;
     private readonly RecursiveDeploymentValidator _deploymentValidator;
+    private readonly SensorRegistryService _sensorRegistry;
 
     public TelemetryController(
         TelemetryIngestionService ingestionService,
-        RecursiveDeploymentValidator deploymentValidator)
+        RecursiveDeploymentValidator deploymentValidator,
+        SensorRegistryService sensorRegistry)
     {
         _ingestionService = ingestionService;
         _deploymentValidator = deploymentValidator;
+        _sensorRegistry = sensorRegistry;
     }
-
-    // ---------------------------------------------------------
-    // TELEMETRY HEALTH
-    // ---------------------------------------------------------
 
     [HttpGet("health")]
     public IActionResult Health()
@@ -35,10 +34,6 @@ public class TelemetryController : ControllerBase
         });
     }
 
-    // ---------------------------------------------------------
-    // TELEMETRY INGESTION
-    // ---------------------------------------------------------
-
     [HttpPost("ingest")]
     public ActionResult<TelemetryIngestionResult> Ingest(
         [FromBody] TelemetryIngestionRequest request)
@@ -48,21 +43,114 @@ public class TelemetryController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
+        if (request.SensorDeviceId == Guid.Empty)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Sensor device identifier must be a valid GUID."
+            });
+        }
+
+        if (!_sensorRegistry.Contains(
+                request.SensorDeviceId))
+        {
+            return NotFound(new
+            {
+                message =
+                    "The specified sensor is not registered.",
+                sensorDeviceId =
+                    request.SensorDeviceId
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                request.MetricName))
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Telemetry metric name is required."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Unit))
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Telemetry unit is required."
+            });
+        }
+
+        if (double.IsNaN(request.Value) ||
+            double.IsInfinity(request.Value))
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Telemetry value must be a finite number."
+            });
+        }
+
+        if (request.MinimumExpectedValue >
+            request.MaximumExpectedValue)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Minimum expected value cannot exceed " +
+                    "maximum expected value."
+            });
+        }
+
+        if (request.WarningThreshold >
+            request.CriticalThreshold)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Warning threshold cannot exceed " +
+                    "critical threshold."
+            });
+        }
+
         var metric = new TelemetryMetric
         {
-            SensorDeviceId = request.SensorDeviceId,
-            MetricName = request.MetricName,
-            Unit = request.Unit,
-            MinimumExpectedValue = request.MinimumExpectedValue,
-            MaximumExpectedValue = request.MaximumExpectedValue,
-            WarningThreshold = request.WarningThreshold,
-            CriticalThreshold = request.CriticalThreshold,
-            IsEnabled = request.IsEnabled
+            SensorDeviceId =
+                request.SensorDeviceId,
+
+            MetricName =
+                request.MetricName.Trim(),
+
+            Unit =
+                request.Unit.Trim(),
+
+            MinimumExpectedValue =
+                request.MinimumExpectedValue,
+
+            MaximumExpectedValue =
+                request.MaximumExpectedValue,
+
+            WarningThreshold =
+                request.WarningThreshold,
+
+            CriticalThreshold =
+                request.CriticalThreshold,
+
+            IsEnabled =
+                request.IsEnabled
         };
 
-        var result = _ingestionService.Process(
-            metric,
-            request.Value);
+        var result =
+            _ingestionService.Process(
+                metric,
+                request.Value);
+
+        if (!result.Success)
+        {
+            return UnprocessableEntity(result);
+        }
 
         return Ok(result);
     }
@@ -76,10 +164,6 @@ public class TelemetryController : ControllerBase
     public IActionResult GenericDemo()
     {
         var sensorId = Guid.NewGuid();
-
-        // Fully qualified type names are intentional.
-        // This avoids conflicts with any other TelemetryPacket
-        // definitions in the solution.
 
         var temperature =
             new SmartX.Shared.Generics.TelemetryPacket<float>(
@@ -114,13 +198,13 @@ public class TelemetryController : ControllerBase
                 80.25,
                 "W");
 
-        // Operator overloading demonstrations.
         var aggregate = readingOne + readingTwo;
         var delta = readingOne - readingTwo;
 
         return Ok(new
         {
-            demonstration = "Generics and operator overloading",
+            demonstration =
+                "Generics and operator overloading",
 
             genericPackets = new
             {
@@ -133,13 +217,15 @@ public class TelemetryController : ControllerBase
             {
                 addition = new
                 {
-                    operation = "readingOne + readingTwo",
+                    operation =
+                        "readingOne + readingTwo",
                     result = aggregate
                 },
 
                 subtraction = new
                 {
-                    operation = "readingOne - readingTwo",
+                    operation =
+                        "readingOne - readingTwo",
                     result = delta
                 }
             }
@@ -216,7 +302,8 @@ public class TelemetryController : ControllerBase
                                             {
                                                 new DeploymentNode
                                                 {
-                                                    Name = "Temperature Sensor",
+                                                    Name =
+                                                        "Temperature Sensor",
                                                     NodeType = "Sensor",
                                                     IsConfigured = true
                                                 }
@@ -247,7 +334,8 @@ public class TelemetryController : ControllerBase
             }
         };
 
-        const string targetNode = "Temperature Sensor";
+        const string targetNode =
+            "Temperature Sensor";
 
         var isValid =
             _deploymentValidator.ValidateNode(
@@ -257,23 +345,18 @@ public class TelemetryController : ControllerBase
 
         return Ok(new
         {
-            demonstration = "Recursive deployment validation",
+            demonstration =
+                "Recursive deployment validation",
             targetNode,
             isValid,
             hierarchyDepth = path.Count,
             path,
-
             validationResult =
                 isValid
                     ? "Target exists on a fully configured deployment path."
                     : "Target is unavailable on a fully configured deployment path."
         });
     }
-
-    // ---------------------------------------------------------
-    // SECTION 4
-    // RECURSIVE VALIDATION FAILURE DEMO
-    // ---------------------------------------------------------
 
     [HttpGet("recursive-validation-failure-demo")]
     public IActionResult RecursiveValidationFailureDemo()
@@ -312,7 +395,8 @@ public class TelemetryController : ControllerBase
             }
         };
 
-        const string targetNode = "Hidden Sensor";
+        const string targetNode =
+            "Hidden Sensor";
 
         var isValid =
             _deploymentValidator.ValidateNode(
@@ -322,24 +406,18 @@ public class TelemetryController : ControllerBase
 
         return Ok(new
         {
-            demonstration = "Recursive validation failure handling",
+            demonstration =
+                "Recursive validation failure handling",
             targetNode,
             isValid,
             hierarchyDepth = path.Count,
             path,
-
             expectedResult = false,
-
             reason =
                 "The target exists below an unconfigured deployment node, " +
                 "so the recursive validator correctly rejects the path."
         });
     }
-
-    // ---------------------------------------------------------
-    // SECTION 4
-    // RECURSIVE VALIDATION MISSING TARGET DEMO
-    // ---------------------------------------------------------
 
     [HttpGet("recursive-validation-missing-demo")]
     public IActionResult RecursiveValidationMissingDemo()
@@ -367,7 +445,8 @@ public class TelemetryController : ControllerBase
             }
         };
 
-        const string targetNode = "Nonexistent Sensor";
+        const string targetNode =
+            "Nonexistent Sensor";
 
         var isValid =
             _deploymentValidator.ValidateNode(
@@ -377,27 +456,22 @@ public class TelemetryController : ControllerBase
 
         return Ok(new
         {
-            demonstration = "Recursive missing-target handling",
+            demonstration =
+                "Recursive missing-target handling",
             targetNode,
             isValid,
             hierarchyDepth = path.Count,
             path,
-
             expectedResult = false,
-
             validationResult =
                 "The requested target does not exist in the deployment hierarchy."
         });
     }
 
-    // ---------------------------------------------------------
-    // SECTION 4
-    // HISTORICAL TELEMETRY BATCH PROCESSING
-    // ---------------------------------------------------------
-
     [HttpGet("historical-batch-demo")]
     public IActionResult HistoricalBatchDemo(
-        [FromServices] TelemetryBatchProcessor batchProcessor)
+        [FromServices]
+        TelemetryBatchProcessor batchProcessor)
     {
         float[][] historicalBatches =
         {
@@ -406,33 +480,36 @@ public class TelemetryController : ControllerBase
             new float[] { 24.7f, 25.1f, 25.6f, 26.0f }
         };
 
-        // Process jagged array data into a generic List.
         var packets =
             batchProcessor.ProcessHistoricalBatches(
                 historicalBatches);
 
-        // Convert the jagged array into a rectangular
-        // multidimensional matrix.
         var matrix =
             batchProcessor.CreateTelemetryMatrix(
                 historicalBatches);
 
-        var matrixRows = matrix.GetLength(0);
-        var matrixColumns = matrix.GetLength(1);
+        var matrixRows =
+            matrix.GetLength(0);
 
-        // Convert the multidimensional matrix into a
-        // collection suitable for JSON serialization.
-        var matrixData = new List<float[]>(matrixRows);
+        var matrixColumns =
+            matrix.GetLength(1);
 
-        for (var row = 0; row < matrixRows; row++)
+        var matrixData =
+            new List<float[]>(matrixRows);
+
+        for (var row = 0;
+             row < matrixRows;
+             row++)
         {
-            var rowData = new float[matrixColumns];
+            var rowData =
+                new float[matrixColumns];
 
             for (var column = 0;
                  column < matrixColumns;
                  column++)
             {
-                rowData[column] = matrix[row, column];
+                rowData[column] =
+                    matrix[row, column];
             }
 
             matrixData.Add(rowData);
@@ -448,18 +525,22 @@ public class TelemetryController : ControllerBase
 
         return Ok(new
         {
-            demonstration = "Jagged arrays, multidimensional arrays and generic collections",
+            demonstration =
+                "Jagged arrays, multidimensional arrays and generic collections",
 
             sourceData = new
             {
-                batchCount = historicalBatches.Length,
+                batchCount =
+                    historicalBatches.Length,
                 batchSizes,
                 totalReadings
             },
 
             collectionProcessing = new
             {
-                readingsTransferredToList = packets.Count,
+                readingsTransferredToList =
+                    packets.Count,
+
                 collectionType =
                     "List<SmartX.Shared.Generics.TelemetryPacket<float>>"
             },
