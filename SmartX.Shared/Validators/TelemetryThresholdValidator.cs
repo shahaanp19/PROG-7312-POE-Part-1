@@ -55,3 +55,7 @@ public class TelemetryThresholdValidator
         return !IsWithinExpectedRange(metric, value);
     }
 }
+
+//References
+//BillWagner (2026). Nullable reference types - C#. [online] MicrosoftLearn. Available at: https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/null-safety/nullable-reference-types [Accessed 12 Sept. 2026].
+//dotnet-bot (2026). IReadOnlyList Interface (System.Collections.Generic). [online] MicrosoftLearn. Available at: https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ireadonlylist-1?view=net-10.0 [Accessed 12 Sept. 2026].
