@@ -5,13 +5,17 @@ using SmartX.Shared.Validators;
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================================================
+// SMART-X DATA INGESTION GATEWAY
+// =========================================================
+
+// =========================================================
 // CONTROLLERS
 // =========================================================
 
 builder.Services.AddControllers();
 
 // =========================================================
-// SWAGGER
+// API DOCUMENTATION
 // =========================================================
 
 builder.Services.AddEndpointsApiExplorer();
@@ -25,6 +29,8 @@ builder.Services.AddSwaggerGen(options =>
 // =========================================================
 // CORS
 // =========================================================
+// The policy is intentionally named so that the trusted
+// frontend integration point is explicit and maintainable.
 
 builder.Services.AddCors(options =>
 {
@@ -38,12 +44,16 @@ builder.Services.AddCors(options =>
 });
 
 // =========================================================
-// APPLICATION SERVICES
+// TELEMETRY VALIDATION & INGESTION SERVICES
 // =========================================================
 
 builder.Services.AddScoped<TelemetryThresholdValidator>();
 builder.Services.AddScoped<TelemetryValidator>();
 builder.Services.AddScoped<TelemetryIngestionService>();
+
+// =========================================================
+// SMART-X SENSOR & TELEMETRY SERVICES
+// =========================================================
 
 builder.Services.AddSingleton<SensorRegistryService>();
 builder.Services.AddSingleton<TelemetryHistoryService>();
@@ -52,7 +62,7 @@ builder.Services.AddSingleton<SensorAttachmentService>();
 builder.Services.AddSingleton<DashboardEngagementService>();
 
 // =========================================================
-// SECTION 4 SERVICES
+// ADVANCED DATA PROCESSING SERVICES
 // =========================================================
 
 builder.Services.AddSingleton<TelemetryBatchProcessor>();
@@ -67,6 +77,8 @@ var app = builder.Build();
 // =========================================================
 // GLOBAL EXCEPTION HANDLING
 // =========================================================
+// This middleware provides a centralised safety boundary for
+// unexpected API failures.
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -91,8 +103,25 @@ app.UseCors("SmartXWebClient");
 app.MapControllers();
 
 // =========================================================
-// GATEWAY HEALTH / STATUS
+// SMART-X GATEWAY HEALTH ENDPOINT
 // =========================================================
+// Dedicated health endpoint allows the frontend and future
+// monitoring infrastructure to distinguish gateway health
+// checks from normal API routes.
+
+app.MapGet("/health", () =>
+    Results.Ok(new
+    {
+        application = "Smart-X Data Ingestion Gateway",
+        status = "Online",
+        timestampUtc = DateTime.UtcNow
+    }))
+    .WithName("GetGatewayHealth");
+
+// =========================================================
+// SMART-X GATEWAY ROOT ENDPOINT
+// =========================================================
+// Retained for simple browser/API verification.
 
 app.MapGet("/", () =>
     Results.Ok(new
@@ -100,6 +129,7 @@ app.MapGet("/", () =>
         application = "Smart-X Data Ingestion Gateway",
         status = "Online",
         timestampUtc = DateTime.UtcNow
-    }));
+    }))
+    .WithName("GetGatewayStatus");
 
 app.Run();
