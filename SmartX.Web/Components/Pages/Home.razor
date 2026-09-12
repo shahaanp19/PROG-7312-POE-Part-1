@@ -7,240 +7,274 @@
 @inject IHttpClientFactory HttpClientFactory
 @implements IDisposable
 
-<header class="gateway-header">
-    <div>
-        <span class="gateway-label">SMART-X</span>
+<div class="sx-page">
 
-        <h1>Data Ingestion Gateway</h1>
+    <!-- HERO -->
+    <section class="sx-hero">
+        <div class="sx-hero-content">
 
-        <p>
-            Connected sensor management and telemetry monitoring.
-        </p>
-    </div>
+            <div class="sx-eyebrow">
+                <span class="sx-eyebrow-dot"></span>
+                SMART-X / EDGE OPERATIONS
+            </div>
 
-    <div class="gateway-status">
-        <span class="status-dot @(GatewayOnline ? "online" : "offline")"></span>
-        <span>@GatewayStatus</span>
-    </div>
-</header>
+            <h1>
+                Data Ingestion
+                <span>Gateway</span>
+            </h1>
+
+            <p class="sx-hero-description">
+                Centralised telemetry monitoring, sensor management,
+                and intelligent incident prioritisation for distributed
+                IoT environments.
+            </p>
+
+            <div class="sx-hero-meta">
+                <div class="sx-status-pill">
+                    <span class="sx-status-dot @(GatewayOnline ? "online" : "offline")"></span>
+                    <span>@GatewayStatus</span>
+                </div>
+
+                <span class="sx-divider"></span>
+
+                <span class="sx-meta-text">
+                    Edge Gateway Interface
+                </span>
+            </div>
+
+        </div>
+
+        <div class="sx-hero-visual" aria-hidden="true">
+            <div class="sx-orbit sx-orbit-one"></div>
+            <div class="sx-orbit sx-orbit-two"></div>
+            <div class="sx-core">
+                <span>SX</span>
+            </div>
+            <div class="sx-signal sx-signal-one"></div>
+            <div class="sx-signal sx-signal-two"></div>
+            <div class="sx-signal sx-signal-three"></div>
+        </div>
+    </section>
 
 
-<main class="gateway-content">
+    <!-- GATEWAY CONTROL -->
+    <section class="sx-control-panel">
 
-    <!-- =====================================================
-         GATEWAY CONTROL CENTER
-         ===================================================== -->
+        <div class="sx-section-heading">
+            <div>
+                <span class="sx-section-kicker">01 / SYSTEM STATUS</span>
+                <h2>Gateway Control Centre</h2>
+                <p>
+                    Monitor the connection between the Smart-X client
+                    interface and the ingestion API.
+                </p>
+            </div>
 
-    <section class="welcome-section">
+            <button class="sx-button sx-button-primary"
+                    @onclick="CheckGatewayAsync"
+                    disabled="@IsChecking">
 
-        <h2>Gateway Control Center</h2>
+                <span class="sx-button-icon">
+                    ↻
+                </span>
 
-        <p>
-            Monitor gateway health, prioritise active incidents,
-            and interact directly with Smart-X system activity.
-        </p>
+                @(IsChecking
+                    ? "Checking Gateway..."
+                    : "Refresh Gateway")
 
-        <button class="gateway-button"
-                @onclick="CheckGatewayAsync"
-                disabled="@IsChecking">
-
-            @(IsChecking
-                ? "Checking Gateway..."
-                : "Refresh Gateway")
-
-        </button>
+            </button>
+        </div>
 
         @if (!string.IsNullOrWhiteSpace(ConnectionMessage))
         {
-            <p class="@ConnectionCssClass">
-                @ConnectionMessage
-            </p>
+            <div class="sx-feedback @(GatewayOnline ? "success" : "error")"
+                 role="status"
+                 aria-live="polite">
+
+                <span class="sx-feedback-icon">
+                    @(GatewayOnline ? "✓" : "!")
+                </span>
+
+                <span>@ConnectionMessage</span>
+
+            </div>
         }
 
     </section>
 
 
-    <!-- =====================================================
-         DYNAMIC ENGAGEMENT COMMAND CENTRE
-         ===================================================== -->
+    <!-- ENGAGEMENT CENTRE -->
+    <section class="sx-section">
 
-    <section class="gateway-card active">
+        <div class="sx-section-heading">
+            <div>
+                <span class="sx-section-kicker">02 / INTELLIGENT MONITORING</span>
+                <h2>Incident Engagement Centre</h2>
+                <p>
+                    Dynamic attention management prioritises operational
+                    incidents according to severity and current system state.
+                </p>
+            </div>
 
-        <div class="card-icon">EC</div>
-
-        <h2>Incident Engagement Centre</h2>
-
-        <p>
-            The dashboard dynamically prioritises active incidents
-            according to severity and current system attention level.
-        </p>
-
+            <div class="sx-live-label">
+                <span></span>
+                LIVE MONITORING
+            </div>
+        </div>
 
         @if (IsLoadingEngagement && EngagementSnapshot is null)
         {
-            <p>
-                Loading live engagement data...
-            </p>
+            <div class="sx-loading-card">
+                <div class="sx-spinner"></div>
+                <div>
+                    <strong>Loading engagement intelligence</strong>
+                    <span>Retrieving current gateway incident state...</span>
+                </div>
+            </div>
         }
         else if (EngagementSnapshot is not null)
         {
-            <!-- =================================================
-                 ATTENTION STATE
-                 ================================================= -->
+            <div class="sx-attention-card">
 
-            <div class="gateway-card active">
+                <div>
+                    <span class="sx-card-kicker">CURRENT ATTENTION LEVEL</span>
 
-                <h3>System Attention State</h3>
+                    <strong class="sx-attention-value">
+                        @EngagementSnapshot.AttentionLevel
+                    </strong>
 
-                <strong>
-                    @EngagementSnapshot.AttentionLevel
-                </strong>
+                    <span class="sx-card-subtext">
+                        Engagement snapshot generated
+                        @EngagementSnapshot.GeneratedAtUtc.ToLocalTime()
+                    </span>
+                </div>
 
-                <p>
-                    Engagement data generated:
-                    @EngagementSnapshot.GeneratedAtUtc.ToLocalTime()
-                </p>
+                <div class="sx-attention-indicator">
+                    <span></span>
+                </div>
 
             </div>
 
 
-            <!-- =================================================
-                 KPI SUMMARY
-                 ================================================= -->
+            <!-- KPI GRID -->
+            <div class="sx-kpi-grid">
 
-            <div class="gateway-grid">
-
-                <article class="gateway-card">
-
-                    <h3>Total Issues</h3>
-
-                    <strong>
-                        @EngagementSnapshot.TotalIssues
-                    </strong>
-
+                <article class="sx-kpi-card">
+                    <span class="sx-kpi-label">TOTAL ISSUES</span>
+                    <strong>@EngagementSnapshot.TotalIssues</strong>
+                    <span class="sx-kpi-description">All recorded incidents</span>
                 </article>
 
-
-                <article class="gateway-card">
-
-                    <h3>Open</h3>
-
-                    <strong>
-                        @EngagementSnapshot.OpenIssues
-                    </strong>
-
+                <article class="sx-kpi-card">
+                    <span class="sx-kpi-label">OPEN</span>
+                    <strong>@EngagementSnapshot.OpenIssues</strong>
+                    <span class="sx-kpi-description">Currently requiring monitoring</span>
                 </article>
 
-
-                <article class="gateway-card">
-
-                    <h3>Critical</h3>
-
-                    <strong>
-                        @EngagementSnapshot.CriticalOpenIssues
-                    </strong>
-
+                <article class="sx-kpi-card sx-kpi-critical">
+                    <span class="sx-kpi-label">CRITICAL</span>
+                    <strong>@EngagementSnapshot.CriticalOpenIssues</strong>
+                    <span class="sx-kpi-description">Immediate attention required</span>
                 </article>
 
-
-                <article class="gateway-card">
-
-                    <h3>Warnings</h3>
-
-                    <strong>
-                        @EngagementSnapshot.WarningOpenIssues
-                    </strong>
-
+                <article class="sx-kpi-card sx-kpi-warning">
+                    <span class="sx-kpi-label">WARNINGS</span>
+                    <strong>@EngagementSnapshot.WarningOpenIssues</strong>
+                    <span class="sx-kpi-description">Under active observation</span>
                 </article>
 
-
-                <article class="gateway-card">
-
-                    <h3>Information</h3>
-
-                    <strong>
-                        @EngagementSnapshot.InformationalOpenIssues
-                    </strong>
-
+                <article class="sx-kpi-card">
+                    <span class="sx-kpi-label">INFORMATION</span>
+                    <strong>@EngagementSnapshot.InformationalOpenIssues</strong>
+                    <span class="sx-kpi-description">Informational events</span>
                 </article>
 
-
-                <article class="gateway-card">
-
-                    <h3>Resolved</h3>
-
-                    <strong>
-                        @EngagementSnapshot.ResolvedIssues
-                    </strong>
-
+                <article class="sx-kpi-card sx-kpi-resolved">
+                    <span class="sx-kpi-label">RESOLVED</span>
+                    <strong>@EngagementSnapshot.ResolvedIssues</strong>
+                    <span class="sx-kpi-description">Successfully closed incidents</span>
                 </article>
 
             </div>
 
 
-            <!-- =================================================
-                 DYNAMIC ATTENTION SIGNAL
-                 ================================================= -->
+            <!-- ATTENTION SIGNAL -->
             @if (EngagementSnapshot.CriticalOpenIssues > 0)
             {
-                <div class="connection-error">
+                <div class="sx-alert sx-alert-critical">
 
-                    <strong>
-                        Immediate attention required.
-                    </strong>
+                    <div class="sx-alert-icon">!</div>
 
-                    @EngagementSnapshot.CriticalOpenIssues
-                    critical
-                    @(EngagementSnapshot.CriticalOpenIssues == 1
-                        ? "incident requires"
-                        : "incidents require")
-                    immediate attention.
+                    <div>
+                        <strong>Immediate attention required</strong>
+
+                        <p>
+                            @EngagementSnapshot.CriticalOpenIssues
+                            critical
+                            @(EngagementSnapshot.CriticalOpenIssues == 1
+                                ? "incident requires"
+                                : "incidents require")
+                            immediate attention.
+                        </p>
+                    </div>
 
                 </div>
             }
             else if (EngagementSnapshot.WarningOpenIssues > 0)
             {
-                <div class="connection-error">
+                <div class="sx-alert sx-alert-warning">
 
-                    <strong>
-                        Attention required.
-                    </strong>
+                    <div class="sx-alert-icon">!</div>
 
-                    @EngagementSnapshot.WarningOpenIssues
-                    warning
-                    @(EngagementSnapshot.WarningOpenIssues == 1
-                        ? "incident remains"
-                        : "incidents remain")
-                    under observation.
+                    <div>
+                        <strong>Attention required</strong>
+
+                        <p>
+                            @EngagementSnapshot.WarningOpenIssues
+                            warning
+                            @(EngagementSnapshot.WarningOpenIssues == 1
+                                ? "incident remains"
+                                : "incidents remain")
+                            under observation.
+                        </p>
+                    </div>
 
                 </div>
             }
             else if (EngagementSnapshot.OpenIssues > 0)
             {
-                <div class="connection-success">
+                <div class="sx-alert sx-alert-info">
 
-                    <strong>
-                        Monitoring active.
-                    </strong>
+                    <div class="sx-alert-icon">i</div>
 
-                    @EngagementSnapshot.OpenIssues
-                    open
-                    @(EngagementSnapshot.OpenIssues == 1
-                        ? "incident is"
-                        : "incidents are")
-                    currently being monitored.
+                    <div>
+                        <strong>Monitoring active</strong>
+
+                        <p>
+                            @EngagementSnapshot.OpenIssues
+                            open
+                            @(EngagementSnapshot.OpenIssues == 1
+                                ? "incident is"
+                                : "incidents are")
+                            currently being monitored.
+                        </p>
+                    </div>
 
                 </div>
             }
             else
             {
-                <div class="connection-success">
+                <div class="sx-alert sx-alert-success">
 
-                    <strong>
-                        All clear.
-                    </strong>
+                    <div class="sx-alert-icon">✓</div>
 
-                    No active incidents currently require attention.
+                    <div>
+                        <strong>All systems clear</strong>
+
+                        <p>
+                            No active incidents currently require attention.
+                        </p>
+                    </div>
 
                 </div>
             }
@@ -250,68 +284,68 @@
     </section>
 
 
-    <!-- =====================================================
-         PRIORITY ENGAGEMENT QUEUE
-         ===================================================== -->
+    <!-- PRIORITY QUEUE -->
     @if (EngagementSnapshot is not null)
     {
-        <section class="gateway-card active">
+        <section class="sx-section">
 
-            <h2>Priority Attention Queue</h2>
-
-            <p>
-                The engagement engine automatically ranks active
-                incidents so the highest-risk items receive attention first.
-            </p>
+            <div class="sx-section-heading">
+                <div>
+                    <span class="sx-section-kicker">03 / PRIORITY ENGINE</span>
+                    <h2>Priority Attention Queue</h2>
+                    <p>
+                        Highest-risk incidents are surfaced first to reduce
+                        investigation time and improve operational response.
+                    </p>
+                </div>
+            </div>
 
             @if (!EngagementSnapshot.PriorityIssues.Any())
             {
-                <p>
-                    No active incidents require prioritisation.
-                </p>
+                <div class="sx-empty-state">
+                    <div class="sx-empty-icon">✓</div>
+                    <strong>No active incidents</strong>
+                    <span>The priority queue is currently clear.</span>
+                </div>
             }
             else
             {
-                <div class="issue-list">
+                <div class="sx-issue-grid">
 
                     @foreach (var issue in EngagementSnapshot.PriorityIssues)
                     {
-                        <article class="issue-item">
+                        <article class="sx-issue-card">
 
-                            <h3>
-                                @issue.Title
-                            </h3>
+                            <div class="sx-issue-top">
+                                <span class="sx-severity sx-severity-@issue.Severity.ToLowerInvariant()">
+                                    @issue.Severity
+                                </span>
 
-                            <p>
-                                @issue.Description
-                            </p>
+                                <span class="sx-issue-status">
+                                    @issue.Status
+                                </span>
+                            </div>
 
-                            <p>
-                                <strong>Severity:</strong>
-                                @issue.Severity
-                            </p>
+                            <h3>@issue.Title</h3>
 
-                            <p>
-                                <strong>Status:</strong>
-                                @issue.Status
-                            </p>
+                            <p>@issue.Description</p>
 
-                            <p>
-                                <strong>Reported:</strong>
-                                @issue.ReportedAtUtc.ToLocalTime()
-                            </p>
+                            <div class="sx-issue-meta">
+                                <span>REPORTED</span>
+                                <strong>@issue.ReportedAtUtc.ToLocalTime()</strong>
+                            </div>
 
                             @if (issue.Status.Equals(
                                 "Open",
                                 StringComparison.OrdinalIgnoreCase))
                             {
-                                <button class="gateway-button"
+                                <button class="sx-button sx-button-danger"
                                         @onclick="() => ResolveIssueAsync(issue.Id)"
                                         disabled="@IsResolvingIssue">
 
                                     @(IsResolvingIssue
                                         ? "Resolving..."
-                                        : "Resolve Issue")
+                                        : "Resolve Incident")
 
                                 </button>
                             }
@@ -326,278 +360,293 @@
     }
 
 
-    <!-- =====================================================
-         INTERACTIVE INCIDENT TRIAGE
-         ===================================================== -->
+    <!-- TRIAGE -->
+    <section class="sx-section">
 
-    <section class="gateway-card">
+        <div class="sx-section-heading">
+            <div>
+                <span class="sx-section-kicker">04 / INVESTIGATION</span>
+                <h2>Interactive Incident Triage</h2>
+                <p>
+                    Search, filter, and sort incidents to isolate the information
+                    required during operational investigation.
+                </p>
+            </div>
+        </div>
 
-        <h2>Interactive Incident Triage</h2>
+        <div class="sx-filter-panel">
 
-        <p>
-            Filter and sort incidents to focus the dashboard on
-            the information most relevant to the current investigation.
-        </p>
+            <div class="sx-field">
+                <label for="issueSearch">Search incidents</label>
 
+                <input id="issueSearch"
+                       class="sx-input"
+                       @bind="SearchText"
+                       @bind:event="oninput"
+                       placeholder="Search title or description..." />
+            </div>
 
-        <div>
+            <div class="sx-field">
+                <label for="severityFilter">Severity</label>
 
-            <label for="issueSearch">
-                Search incidents
-            </label>
+                <select id="severityFilter"
+                        class="sx-input"
+                        @bind="SelectedSeverity">
 
-            <input id="issueSearch"
-                   @bind="SearchText"
-                   @bind:event="oninput"
-                   placeholder="Search title or description..." />
+                    <option value="All">All severities</option>
+                    <option value="Critical">Critical</option>
+                    <option value="Warning">Warning</option>
+                    <option value="Info">Info</option>
+
+                </select>
+            </div>
+
+            <div class="sx-field">
+                <label for="statusFilter">Status</label>
+
+                <select id="statusFilter"
+                        class="sx-input"
+                        @bind="SelectedStatus">
+
+                    <option value="All">All statuses</option>
+                    <option value="Open">Open</option>
+                    <option value="Resolved">Resolved</option>
+
+                </select>
+            </div>
+
+            <div class="sx-field">
+                <label for="sortOrder">Sort by</label>
+
+                <select id="sortOrder"
+                        class="sx-input"
+                        @bind="SelectedSort">
+
+                    <option value="Priority">Highest priority</option>
+                    <option value="Newest">Newest first</option>
+                    <option value="Oldest">Oldest first</option>
+
+                </select>
+            </div>
 
         </div>
 
-
-        <div>
-
-            <label for="severityFilter">
-                Severity filter
-            </label>
-
-            <select id="severityFilter"
-                    @bind="SelectedSeverity">
-
-                <option value="All">
-                    All severities
-                </option>
-
-                <option value="Critical">
-                    Critical
-                </option>
-
-                <option value="Warning">
-                    Warning
-                </option>
-
-                <option value="Info">
-                    Info
-                </option>
-
-            </select>
-
+        <div class="sx-results-summary">
+            <span class="sx-results-count">@FilteredIssues.Count()</span>
+            <span>of @Issues.Count incidents displayed</span>
         </div>
-
-
-        <div>
-
-            <label for="statusFilter">
-                Status filter
-            </label>
-
-            <select id="statusFilter"
-                    @bind="SelectedStatus">
-
-                <option value="All">
-                    All statuses
-                </option>
-
-                <option value="Open">
-                    Open
-                </option>
-
-                <option value="Resolved">
-                    Resolved
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div>
-
-            <label for="sortOrder">
-                Sort incidents
-            </label>
-
-            <select id="sortOrder"
-                    @bind="SelectedSort">
-
-                <option value="Priority">
-                    Highest priority first
-                </option>
-
-                <option value="Newest">
-                    Newest first
-                </option>
-
-                <option value="Oldest">
-                    Oldest first
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <p>
-            Showing
-            <strong>@FilteredIssues.Count()</strong>
-            of
-            <strong>@Issues.Count</strong>
-            incidents.
-        </p>
 
     </section>
 
 
-    <!-- =====================================================
-         ISSUE REPORTING
-         ===================================================== -->
+    <!-- REPORT ISSUE -->
+    <section class="sx-section">
 
-    <section class="gateway-card">
+        <div class="sx-section-heading">
+            <div>
+                <span class="sx-section-kicker">05 / OPERATOR INPUT</span>
+                <h2>Report an Issue</h2>
+                <p>
+                    Create an operational incident and immediately feed it
+                    into the Smart-X engagement prioritisation engine.
+                </p>
+            </div>
+        </div>
 
-        <h2>Report an Issue</h2>
+        <div class="sx-form-panel">
 
-        <p>
-            Add a new incident to the live engagement system.
-            Severity directly influences its attention priority.
-        </p>
+            <div class="sx-field sx-field-wide">
+                <label for="issueTitle">Issue title</label>
 
+                <input id="issueTitle"
+                       class="sx-input"
+                       @bind="NewIssueTitle"
+                       placeholder="e.g. Soil moisture sensor reporting abnormal values" />
+            </div>
 
-        <div>
+            <div class="sx-field sx-field-wide">
+                <label for="issueDescription">Description</label>
 
-            <label for="issueTitle">
-                Issue Title
-            </label>
+                <textarea id="issueDescription"
+                          class="sx-input sx-textarea"
+                          @bind="NewIssueDescription"
+                          placeholder="Describe the observed behaviour, affected device, or operational concern"></textarea>
+            </div>
 
-            <input id="issueTitle"
-                   @bind="NewIssueTitle"
-                   placeholder="Enter issue title" />
+            <div class="sx-field">
+                <label for="issueSeverity">Severity</label>
+
+                <select id="issueSeverity"
+                        class="sx-input"
+                        @bind="NewIssueSeverity">
+
+                    <option value="Info">Information</option>
+                    <option value="Warning">Warning</option>
+                    <option value="Critical">Critical</option>
+
+                </select>
+            </div>
+
+            <div class="sx-form-action">
+                <button class="sx-button sx-button-primary"
+                        @onclick="ReportIssueAsync"
+                        disabled="@IsReportingIssue">
+
+                    @(IsReportingIssue
+                        ? "Reporting..."
+                        : "Report Incident")
+
+                </button>
+            </div>
 
         </div>
 
-
-        <div>
-
-            <label for="issueDescription">
-                Description
-            </label>
-
-            <textarea id="issueDescription"
-                      @bind="NewIssueDescription"
-                          placeholder="Describe the issue">
-            </textarea>
-
-            </div>
+    </section>
 
 
+    <!-- LIVE BOARD -->
+    <section class="sx-section">
+
+        <div class="sx-section-heading">
             <div>
-
-                <label for="issueSeverity">
-                    Severity
-                </label>
-
-                <select id="issueSeverity"
-                        @bind="NewIssueSeverity">
-
-                    <option value="Info">
-                        Info
-                    </option>
-
-                    <option value="Warning">
-                        Warning
-                    </option>
-
-                    <option value="Critical">
-                        Critical
-                    </option>
-
-                </select>
-
+                <span class="sx-section-kicker">06 / LIVE OPERATIONS</span>
+                <h2>Live Incident Board</h2>
+                <p>
+                    Current incident activity across the Smart-X environment.
+                </p>
             </div>
 
+            <div class="sx-live-label">
+                <span></span>
+                AUTO REFRESH / 10 SEC
+            </div>
+        </div>
 
-            <button class="gateway-button"
-                    @onclick="ReportIssueAsync"
-                    disabled="@IsReportingIssue">
+        @if (IsLoadingIssues)
+        {
+            <div class="sx-loading-card">
+                <div class="sx-spinner"></div>
+                <div>
+                    <strong>Refreshing incident activity</strong>
+                    <span>Synchronising with the gateway...</span>
+                </div>
+            </div>
+        }
+        else if (!FilteredIssues.Any())
+        {
+            <div class="sx-empty-state">
+                <div class="sx-empty-icon">—</div>
+                <strong>No matching incidents</strong>
+                <span>Try adjusting the current search or filters.</span>
+            </div>
+        }
+        else
+        {
+            <div class="sx-issue-grid">
 
-                @(IsReportingIssue
-                    ? "Reporting..."
-                    : "Report Issue")
+                @foreach (var issue in FilteredIssues)
+                {
+                    <article class="sx-issue-card">
 
-            </button>
+                        <div class="sx-issue-top">
+                            <span class="sx-severity sx-severity-@issue.Severity.ToLowerInvariant()">
+                                @issue.Severity
+                            </span>
 
-        </section>
+                            <span class="sx-issue-status">
+                                @issue.Status
+                            </span>
+                        </div>
+
+                        <h3>@issue.Title</h3>
+
+                        <p>@issue.Description</p>
+
+                        <div class="sx-issue-meta">
+                            <span>REPORTED</span>
+                            <strong>@issue.ReportedAtUtc.ToLocalTime()</strong>
+                        </div>
+
+                        @if (issue.Status.Equals(
+                            "Open",
+                            StringComparison.OrdinalIgnoreCase))
+                        {
+                            <button class="sx-button sx-button-danger"
+                                    @onclick="() => ResolveIssueAsync(issue.Id)"
+                                    disabled="@IsResolvingIssue">
+
+                                @(IsResolvingIssue
+                                    ? "Resolving..."
+                                    : "Resolve Incident")
+
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="sx-resolved-badge">
+                                ✓ Resolved
+                            </span>
+                        }
+
+                    </article>
+                }
+
+            </div>
+        }
+
+    </section>
 
 
-        <!-- =====================================================
-         LIVE INCIDENT BOARD
-         ===================================================== -->
+    <!-- RECENT ACTIVITY -->
+    @if (EngagementSnapshot is not null)
+    {
+        <section class="sx-section">
 
-        <section class="gateway-card">
+            <div class="sx-section-heading">
+                <div>
+                    <span class="sx-section-kicker">07 / AUDIT ACTIVITY</span>
+                    <h2>Recent Engagement Activity</h2>
+                    <p>
+                        Recent system events provide operational context
+                        for changing gateway conditions.
+                    </p>
+                </div>
+            </div>
 
-            <h2>Live Incident Board</h2>
-
-            @if (IsLoadingIssues)
+            @if (!EngagementSnapshot.RecentActivity.Any())
             {
-                <p>
-                    Refreshing incident activity...
-                </p>
-            }
-            else if (!FilteredIssues.Any())
-            {
-                <p>
-                    No incidents match the current filters.
-                </p>
+                <div class="sx-empty-state">
+                    <strong>No recent activity</strong>
+                    <span>New engagement events will appear here.</span>
+                </div>
             }
             else
             {
-                <div class="issue-list">
+                <div class="sx-timeline">
 
-                    @foreach (var issue in FilteredIssues)
+                    @foreach (var issue in EngagementSnapshot.RecentActivity)
                     {
-                        <article class="issue-item">
+                        <article class="sx-timeline-item">
 
-                            <h3>
-                                @issue.Title
-                            </h3>
+                            <div class="sx-timeline-marker"></div>
 
-                            <p>
-                                @issue.Description
-                            </p>
+                            <div class="sx-timeline-content">
 
-                            <p>
-                                <strong>Severity:</strong>
-                                @issue.Severity
-                            </p>
+                                <div class="sx-timeline-heading">
+                                    <h3>@issue.Title</h3>
 
-                            <p>
-                                <strong>Status:</strong>
-                                @issue.Status
-                            </p>
+                                    <span class="sx-severity sx-severity-@issue.Severity.ToLowerInvariant()">
+                                        @issue.Severity
+                                    </span>
+                                </div>
 
-                            <p>
-                                <strong>Reported:</strong>
-                                @issue.ReportedAtUtc.ToLocalTime()
-                            </p>
+                                <div class="sx-timeline-meta">
+                                    <span>@issue.Status</span>
+                                    <span>•</span>
+                                    <span>@issue.ReportedAtUtc.ToLocalTime()</span>
+                                </div>
 
-                            @if (issue.Status.Equals(
-                                "Open",
-                                StringComparison.OrdinalIgnoreCase))
-                            {
-                                <button class="gateway-button"
-                                        @onclick="() => ResolveIssueAsync(issue.Id)"
-                                        disabled="@IsResolvingIssue">
-
-                                    @(IsResolvingIssue
-                                        ? "Resolving..."
-                                        : "Resolve Issue")
-
-                                </button>
-                            }
-                            else
-                            {
-                                <span class="disabled-button">
-                                    Resolved
-                                </span>
-                            }
+                            </div>
 
                         </article>
                     }
@@ -606,153 +655,116 @@
             }
 
         </section>
+    }
 
 
-        <!-- =====================================================
-         RECENT ACTIVITY
-         ===================================================== -->
-        @if (EngagementSnapshot is not null)
-        {
-            <section class="gateway-card">
+    <!-- FEEDBACK -->
+    @if (!string.IsNullOrWhiteSpace(DashboardMessage))
+    {
+        <div class="sx-feedback @(DashboardMessageCssClass == "connection-success" ? "success" : "error")"
+             role="status"
+             aria-live="polite">
 
-                <h2>Recent Engagement Activity</h2>
+            <span class="sx-feedback-icon">
+                @(DashboardMessageCssClass == "connection-success" ? "✓" : "!")
+            </span>
 
+            <span>@DashboardMessage</span>
+
+        </div>
+    }
+
+
+    <!-- ARCHITECTURE PILLARS -->
+    <section class="sx-section sx-architecture-section">
+
+        <div class="sx-section-heading">
+            <div>
+                <span class="sx-section-kicker">SMART-X / ARCHITECTURE</span>
+                <h2>System Capabilities</h2>
                 <p>
-                    Recent incident activity provides immediate feedback
-                    on how the system state is changing.
+                    The Smart-X platform is being developed as a modular
+                    IoT ecosystem across three architectural pillars.
                 </p>
+            </div>
+        </div>
 
-                @if (!EngagementSnapshot.RecentActivity.Any())
-                {
-                    <p>
-                        No recent activity.
-                    </p>
-                }
-                else
-                {
-                    <div class="issue-list">
+        <div class="sx-architecture-grid">
 
-                        @foreach (var issue in EngagementSnapshot.RecentActivity)
-                        {
-                            <article class="issue-item">
+            <article class="sx-feature-card sx-feature-active">
 
-                                <h3>
-                                    @issue.Title
-                                </h3>
+                <div class="sx-feature-number">01</div>
 
-                                <p>
-                                    <strong>Severity:</strong>
-                                    @issue.Severity
-                                </p>
+                <div class="sx-feature-icon">SD</div>
 
-                                <p>
-                                    <strong>Status:</strong>
-                                    @issue.Status
-                                </p>
-
-                                <p>
-                                    @issue.ReportedAtUtc.ToLocalTime()
-                                </p>
-
-                            </article>
-                        }
-
-                    </div>
-                }
-
-            </section>
-        }
-
-
-        <!-- =====================================================
-         SYSTEM FEEDBACK
-         ===================================================== -->
-        @if (!string.IsNullOrWhiteSpace(DashboardMessage))
-        {
-            <section class="gateway-card active">
-
-                <h2>System Feedback</h2>
-
-                <p class="@DashboardMessageCssClass">
-                    @DashboardMessage
-                </p>
-
-            </section>
-        }
-
-
-        <!-- =====================================================
-         MAIN GATEWAY FEATURES
-         ===================================================== -->
-
-        <section class="gateway-grid">
-
-            <article class="gateway-card active">
-
-                <div class="card-icon">SD</div>
+                <span class="sx-feature-status">ACTIVE</span>
 
                 <h3>Sensor Data Ingestion</h3>
 
                 <p>
-                    Register sensors and submit telemetry data
-                    through the Smart-X gateway.
+                    Register distributed sensors, submit telemetry,
+                    validate incoming values, and monitor gateway activity.
                 </p>
 
                 <a href="/sensors"
-                       class="gateway-button">
-
-                    Open Sensor Data
-
+                       class="sx-feature-link">
+                    Open Sensor Management →
                 </a>
 
             </article>
 
 
-            <article class="gateway-card disabled">
+            <article class="sx-feature-card">
 
-                <div class="card-icon">CS</div>
+                <div class="sx-feature-number">02</div>
 
-                <h3>Command Stream / History</h3>
+                <div class="sx-feature-icon">CS</div>
+
+                <span class="sx-feature-status disabled">PART 2</span>
+
+                <h3>Command Stream &amp; History</h3>
 
                 <p>
-                    Command streaming and historical command
-                    management will be available in a later stage.
+                    Real-time command execution and historical command
+                    management will extend the gateway in the next stage.
                 </p>
 
-                <span class="disabled-button">
+                <span class="sx-feature-disabled">
                     Coming Later
                 </span>
 
             </article>
 
 
-            <article class="gateway-card disabled">
+            <article class="sx-feature-card">
 
-                <div class="card-icon">NT</div>
+                <div class="sx-feature-number">03</div>
 
-                <h3>Network Topology / Mesh Routing</h3>
+                <div class="sx-feature-icon">NT</div>
+
+                <span class="sx-feature-status disabled">FINAL PoE</span>
+
+                <h3>Network Topology &amp; Mesh Routing</h3>
 
                 <p>
-                    Network topology and mesh-routing capabilities
-                    will be available in a later stage.
+                    Mesh topology visualisation and intelligent routing
+                    capabilities will complete the Smart-X ecosystem.
                 </p>
 
-                <span class="disabled-button">
+                <span class="sx-feature-disabled">
                     Coming Later
                 </span>
 
             </article>
 
-        </section>
+        </div>
 
-    </main>
+    </section>
+
+</div>
 
 
 @code {
-
-    // =========================================================
-    // GATEWAY STATE
-    // =========================================================
 
     private bool IsChecking;
 
@@ -765,11 +777,6 @@
 
     private string ConnectionCssClass =
         string.Empty;
-
-
-    // =========================================================
-    // ENGAGEMENT STATE
-    // =========================================================
 
     private DashboardEngagementSnapshot? EngagementSnapshot;
 
@@ -789,11 +796,6 @@
     private string DashboardMessageCssClass =
         string.Empty;
 
-
-    // =========================================================
-    // INTERACTIVE FILTER STATE
-    // =========================================================
-
     private string SearchText =
         string.Empty;
 
@@ -806,11 +808,6 @@
     private string SelectedSort =
         "Priority";
 
-
-    // =========================================================
-    // ISSUE FORM
-    // =========================================================
-
     private string NewIssueTitle =
         string.Empty;
 
@@ -820,20 +817,10 @@
     private string NewIssueSeverity =
         "Info";
 
-
-    // =========================================================
-    // LIVE REFRESH
-    // =========================================================
-
     private PeriodicTimer? _refreshTimer;
 
     private CancellationTokenSource?
         _refreshCancellation;
-
-
-    // =========================================================
-    // FILTERED INCIDENTS
-    // =========================================================
 
     private IEnumerable<UserIssue> FilteredIssues
     {
@@ -857,7 +844,6 @@
                             StringComparison.OrdinalIgnoreCase));
             }
 
-
             if (!SelectedSeverity.Equals(
                     "All",
                     StringComparison.OrdinalIgnoreCase))
@@ -869,7 +855,6 @@
                             StringComparison.OrdinalIgnoreCase));
             }
 
-
             if (!SelectedStatus.Equals(
                     "All",
                     StringComparison.OrdinalIgnoreCase))
@@ -880,7 +865,6 @@
                             SelectedStatus,
                             StringComparison.OrdinalIgnoreCase));
             }
-
 
             result =
                 SelectedSort switch
@@ -910,7 +894,6 @@
         }
     }
 
-
     private static int GetSeverityPriority(
         string? severity)
     {
@@ -923,22 +906,12 @@
         };
     }
 
-
-    // =========================================================
-    // INITIALISE
-    // =========================================================
-
     protected override async Task OnInitializedAsync()
     {
         await CheckGatewayAsync();
 
         StartLiveRefresh();
     }
-
-
-    // =========================================================
-    // GATEWAY CONNECTION
-    // =========================================================
 
     private async Task CheckGatewayAsync()
     {
@@ -950,12 +923,8 @@
         IsChecking = true;
 
         ConnectionMessage = null;
-
-        ConnectionCssClass =
-            string.Empty;
-
-        GatewayStatus =
-            "Checking Gateway...";
+        ConnectionCssClass = string.Empty;
+        GatewayStatus = "Checking Gateway...";
 
         try
         {
@@ -1042,11 +1011,6 @@
         }
     }
 
-
-    // =========================================================
-    // LOAD ENGAGEMENT SNAPSHOT
-    // =========================================================
-
     private async Task LoadEngagementAsync()
     {
         if (IsLoadingEngagement)
@@ -1106,11 +1070,6 @@
         }
     }
 
-
-    // =========================================================
-    // REPORT ISSUE
-    // =========================================================
-
     private async Task ReportIssueAsync()
     {
         DashboardMessage = null;
@@ -1126,7 +1085,6 @@
             return;
         }
 
-
         if (string.IsNullOrWhiteSpace(
             NewIssueDescription))
         {
@@ -1138,7 +1096,6 @@
 
             return;
         }
-
 
         IsReportingIssue = true;
 
@@ -1163,12 +1120,10 @@
                     "Open"
             };
 
-
             var response =
                 await httpClient.PostAsJsonAsync(
                     "api/dashboard/issues",
                     issue);
-
 
             if (response.IsSuccessStatusCode)
             {
@@ -1212,11 +1167,6 @@
         }
     }
 
-
-    // =========================================================
-    // RESOLVE ISSUE
-    // =========================================================
-
     private async Task ResolveIssueAsync(
         Guid issueId)
     {
@@ -1239,7 +1189,6 @@
                 await httpClient.PutAsync(
                     $"api/dashboard/issues/{issueId}/resolve",
                     null);
-
 
             if (response.IsSuccessStatusCode)
             {
@@ -1274,11 +1223,6 @@
         }
     }
 
-
-    // =========================================================
-    // PERIODIC LIVE ENGAGEMENT REFRESH
-    // =========================================================
-
     private void StartLiveRefresh()
     {
         _refreshCancellation =
@@ -1291,7 +1235,6 @@
         _ = RefreshLoopAsync(
             _refreshCancellation.Token);
     }
-
 
     private async Task RefreshLoopAsync(
         CancellationToken cancellationToken)
@@ -1323,14 +1266,8 @@
         }
         catch (OperationCanceledException)
         {
-            // Expected during component disposal.
         }
     }
-
-
-    // =========================================================
-    // DISPOSE
-    // =========================================================
 
     public void Dispose()
     {
@@ -1340,7 +1277,6 @@
         }
         catch
         {
-            // Disposal should never throw.
         }
 
         _refreshTimer?.Dispose();

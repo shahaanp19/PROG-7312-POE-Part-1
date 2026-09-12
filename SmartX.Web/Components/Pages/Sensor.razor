@@ -8,301 +8,602 @@
 
 @inject IHttpClientFactory HttpClientFactory
 
-<h1>Sensor Registration</h1>
+<div class="sx-page sx-sensor-page">
 
-<EditForm Model="@form"
-          OnValidSubmit="RegisterSensorAsync">
+    <!-- SENSOR HERO -->
+    <section class="sx-hero sx-sensor-hero">
 
-    <DataAnnotationsValidator />
+        <div class="sx-hero-content">
 
-    <ValidationSummary />
+            <div class="sx-eyebrow">
+                <span class="sx-eyebrow-dot"></span>
+                SMART-X / SENSOR MANAGEMENT
+            </div>
 
-    <div>
-        <label for="name">Sensor Name</label>
-        <InputText id="name"
-                   @bind-Value="form.Name" />
-        <ValidationMessage For="@(() => form.Name)" />
-    </div>
+            <h1>
+                Sensor
+                <span>Registration</span>
+            </h1>
 
-    <div>
-        <label for="deviceIdentifier">
-            Device MAC Address / Unique Identifier
-        </label>
+            <p class="sx-hero-description">
+                Provision distributed IoT devices into the Smart-X gateway
+                and associate each sensor with its physical deployment context.
+            </p>
 
-        <InputText id="deviceIdentifier"
-                   @bind-Value="form.DeviceIdentifier" />
+            <div class="sx-hero-meta">
 
-        <ValidationMessage For="@(() => form.DeviceIdentifier)" />
-    </div>
+                <div class="sx-status-pill">
+                    <span class="sx-status-dot online"></span>
+                    REGISTRATION GATEWAY
+                </div>
 
-    <div>
-        <label for="sensorType">Sensor Category</label>
+                <span class="sx-divider"></span>
 
-        <InputSelect id="sensorType"
-                     @bind-Value="form.SensorType">
+                <span class="sx-meta-text">
+                    Device provisioning &amp; attachment management
+                </span>
 
-            <option value="">
-                -- Select category --
-            </option>
+            </div>
 
-            <option value="Environmental">
-                Environmental
-            </option>
-
-            <option value="Power Consumption">
-                Power Consumption
-            </option>
-
-            <option value="Actuator">
-                Actuator
-            </option>
-
-        </InputSelect>
-
-        <ValidationMessage For="@(() => form.SensorType)" />
-    </div>
-
-    <div>
-        <label for="location">
-            Deployment Location
-        </label>
-
-        <InputText id="location"
-                   @bind-Value="form.Location" />
-
-        <ValidationMessage For="@(() => form.Location)" />
-    </div>
-
-    <div>
-        <label for="description">
-            Description
-        </label>
-
-        <InputTextArea id="description"
-                       @bind-Value="form.Description" />
-
-        <ValidationMessage For="@(() => form.Description)" />
-    </div>
-
-    <div>
-        <label>
-            <InputCheckbox @bind-Value="form.IsActive" />
-            Sensor is active
-        </label>
-    </div>
-
-    <button type="submit"
-            disabled="@isSubmitting">
-
-        @(isSubmitting
-            ? "Registering..."
-            : "Register Sensor")
-
-    </button>
-
-    <button type="button"
-            @onclick="ClearForm"
-            disabled="@isSubmitting">
-
-        Clear
-    </button>
-
-</EditForm>
-
-@if (!string.IsNullOrWhiteSpace(statusMessage))
-{
-    <p role="status"
-           aria-live="polite">
-        @statusMessage
-    </p>
-}
-
-@if (registeredSensor is not null)
-{
-    <hr />
-
-    <h2>Sensor Registered Successfully</h2>
-
-    <p>
-        <strong>Sensor ID:</strong>
-        @registeredSensor.SensorId
-    </p>
-
-    <p>
-        <strong>Name:</strong>
-        @registeredSensor.Name
-    </p>
-
-    <p>
-        <strong>Device Identifier:</strong>
-        @registeredSensor.DeviceIdentifier
-    </p>
-
-    <p>
-        <strong>Sensor Type:</strong>
-        @registeredSensor.SensorType
-    </p>
-
-    <p>
-        <strong>Location:</strong>
-        @registeredSensor.Location
-    </p>
-
-    <p>
-        <strong>Registered:</strong>
-        @registeredSensor.RegisteredAtUtc
-    </p>
-
-    <hr />
-
-    <section aria-labelledby="attachments-heading">
-
-        <h2 id="attachments-heading">
-            Sensor Attachments
-        </h2>
-
-        <p>
-            Attach a device configuration file,
-            deployment photo, or hardware log to this sensor.
-        </p>
-
-        <div>
-            <label for="attachmentType">
-                Attachment Type
-            </label>
-
-            <InputSelect id="attachmentType"
-                         @bind-Value="attachmentType"
-                         disabled="@isUploading">
-
-                <option value="Configuration">
-                    Device Configuration
-                </option>
-
-                <option value="Photo">
-                    Deployment Photo
-                </option>
-
-                <option value="Log">
-                    Hardware Log
-                </option>
-
-                <option value="Other">
-                    Other
-                </option>
-
-            </InputSelect>
         </div>
 
-        <div>
-            <label for="attachment">
-                Select File
-            </label>
+        <div class="sx-hero-visual sensor-visual" aria-hidden="true">
+            <div class="sx-sensor-chip">
+                <span>ESP32</span>
+            </div>
 
-            <InputFile id="attachment"
-                       OnChange="HandleFileSelected"
-                       accept=".jpg,.jpeg,.png,.txt,.log,.json,.xml,.csv,.pdf"
-                       disabled="@isUploading" />
+            <div class="sx-sensor-ring ring-one"></div>
+            <div class="sx-sensor-ring ring-two"></div>
+
+            <span class="sx-data-node node-one"></span>
+            <span class="sx-data-node node-two"></span>
+            <span class="sx-data-node node-three"></span>
         </div>
 
-        @if (selectedFile is not null)
-        {
+    </section>
+
+
+    <!-- REGISTRATION FORM -->
+    <section class="sx-section">
+
+        <div class="sx-section-heading">
+
             <div>
-                <p>
-                    <strong>Selected file:</strong>
-                    @selectedFile.Name
-                </p>
+                <span class="sx-section-kicker">01 / DEVICE PROVISIONING</span>
+
+                <h2>Register IoT Sensor</h2>
 
                 <p>
-                    <strong>Size:</strong>
-                    @FormatFileSize(selectedFile.Size)
-                </p>
-
-                <p>
-                    <strong>Type:</strong>
-                    @(string.IsNullOrWhiteSpace(
-                        selectedFile.ContentType)
-                        ? "Unknown"
-                        : selectedFile.ContentType)
-                </p>
-
-                <p>
-                    <strong>Status:</strong>
-                    Ready for secure upload.
+                    Create a sensor profile containing its identity,
+                    category, deployment location, and operational state.
                 </p>
             </div>
-        }
 
-        <button type="button"
-                @onclick="UploadAttachmentAsync"
-                disabled="@(selectedFile is null || isUploading)">
+            <div class="sx-step-indicator">
+                <span class="active">01</span>
+                <span>02</span>
+                <span>03</span>
+            </div>
 
-            @(isUploading
-                ? "Uploading securely..."
-                : "Upload Attachment")
+        </div>
 
-        </button>
 
-        @if (isUploading)
+        <EditForm Model="@form"
+                  OnValidSubmit="RegisterSensorAsync">
+
+            <DataAnnotationsValidator />
+
+            <div class="sx-validation-panel">
+                <ValidationSummary />
+            </div>
+
+
+            <div class="sx-form-panel">
+
+                <div class="sx-form-section-label">
+                    DEVICE IDENTITY
+                </div>
+
+                <div class="sx-field">
+
+                    <label for="name">
+                        Sensor Name
+                        <span class="required">*</span>
+                    </label>
+
+                    <InputText id="name"
+                               class="sx-input"
+                               @bind-Value="form.Name"
+                               placeholder="e.g. Greenhouse Soil Sensor 01" />
+
+                    <ValidationMessage For="@(() => form.Name)" />
+
+                </div>
+
+
+                <div class="sx-field">
+
+                    <label for="deviceIdentifier">
+                        Device MAC Address / Unique Identifier
+                        <span class="required">*</span>
+                    </label>
+
+                    <InputText id="deviceIdentifier"
+                               class="sx-input"
+                               @bind-Value="form.DeviceIdentifier"
+                               placeholder="e.g. AA:BB:CC:DD:EE:FF" />
+
+                    <ValidationMessage For="@(() => form.DeviceIdentifier)" />
+
+                    <span class="sx-field-help">
+                        Use the physical device MAC address or another unique gateway identifier.
+                    </span>
+
+                </div>
+
+
+                <div class="sx-form-section-label">
+                    DEPLOYMENT CONFIGURATION
+                </div>
+
+
+                <div class="sx-field">
+
+                    <label for="sensorType">
+                        Sensor Category
+                        <span class="required">*</span>
+                    </label>
+
+                    <InputSelect id="sensorType"
+                                 class="sx-input"
+                                 @bind-Value="form.SensorType">
+
+                        <option value="">
+                            Select sensor category
+                        </option>
+
+                        <option value="Environmental">
+                            Environmental
+                        </option>
+
+                        <option value="Power Consumption">
+                            Power Consumption
+                        </option>
+
+                        <option value="Actuator">
+                            Actuator
+                        </option>
+
+                    </InputSelect>
+
+                    <ValidationMessage For="@(() => form.SensorType)" />
+
+                </div>
+
+
+                <div class="sx-field">
+
+                    <label for="location">
+                        Deployment Location
+                        <span class="required">*</span>
+                    </label>
+
+                    <InputText id="location"
+                               class="sx-input"
+                               @bind-Value="form.Location"
+                               placeholder="e.g. Facility A / Zone 1 / Node B" />
+
+                    <ValidationMessage For="@(() => form.Location)" />
+
+                    <span class="sx-field-help">
+                        Identify the physical room, zone, node, or deployment area.
+                    </span>
+
+                </div>
+
+
+                <div class="sx-field sx-field-wide">
+
+                    <label for="description">
+                        Description
+                    </label>
+
+                    <InputTextArea id="description"
+                                   class="sx-input sx-textarea"
+                                   @bind-Value="form.Description"
+                                   placeholder="Describe the device, purpose, deployment context, or hardware configuration..." />
+
+                    <ValidationMessage For="@(() => form.Description)" />
+
+                </div>
+
+
+                <div class="sx-active-toggle">
+
+                    <InputCheckbox id="sensorActive"
+                                   @bind-Value="form.IsActive" />
+
+                    <label for="sensorActive">
+
+                        <strong>
+                            Activate sensor immediately
+                        </strong>
+
+                        <span>
+                            The sensor will be registered as operational
+                            and available to the Smart-X gateway.
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                <div class="sx-form-actions">
+
+                    <button type="submit"
+                            class="sx-button sx-button-primary"
+                            disabled="@isSubmitting">
+
+                        @(isSubmitting
+                            ? "Registering Sensor..."
+                            : "Register Sensor")
+
+                    </button>
+
+                    <button type="button"
+                            class="sx-button sx-button-secondary"
+                            @onclick="ClearForm"
+                            disabled="@isSubmitting">
+
+                        Clear Form
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </EditForm>
+
+
+        @if (!string.IsNullOrWhiteSpace(statusMessage))
         {
-            <p role="status"
-                   aria-live="polite">
-                Upload in progress. Please wait...
-            </p>
-        }
+            <div class="sx-feedback @(registeredSensor is not null ? "success" : "error")"
+                 role="status"
+                 aria-live="polite">
 
-        @if (!string.IsNullOrWhiteSpace(uploadMessage))
-        {
-            <p role="status"
-                   aria-live="polite">
-                @uploadMessage
-            </p>
-        }
+                <span class="sx-feedback-icon">
+                    @(registeredSensor is not null ? "✓" : "!")
+                </span>
 
-        @if (uploadedAttachment is not null)
-        {
-            <div>
-
-                <h3>
-                    Attachment Uploaded Successfully
-                </h3>
-
-                <p>
-                    <strong>File:</strong>
-                    @uploadedAttachment.OriginalFileName
-                </p>
-
-                <p>
-                    <strong>Attachment type:</strong>
-                    @uploadedAttachment.AttachmentType
-                </p>
-
-                <p>
-                    <strong>Size:</strong>
-                    @FormatFileSize(
-                        uploadedAttachment.FileSizeBytes)
-                </p>
-
-                <p>
-                    <strong>Uploaded:</strong>
-                    @uploadedAttachment.UploadedAtUtc
-                </p>
-
-                @if (uploadedAttachment.IsEncrypted)
-                {
-                    <p>
-                        <strong>Encryption:</strong>
-                        @uploadedAttachment.EncryptionAlgorithm
-                    </p>
-                }
+                <span>@statusMessage</span>
 
             </div>
         }
 
     </section>
-}
+
+
+    <!-- REGISTERED SENSOR -->
+    @if (registeredSensor is not null)
+    {
+        <section class="sx-section">
+
+            <div class="sx-success-banner">
+
+                <div class="sx-success-icon">
+                    ✓
+                </div>
+
+                <div>
+                    <span class="sx-section-kicker">REGISTRATION COMPLETE</span>
+                    <h2>Sensor successfully provisioned</h2>
+                    <p>
+                        The Smart-X gateway has accepted the sensor registration.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="sx-sensor-profile">
+
+                <div class="sx-profile-header">
+
+                    <div class="sx-profile-icon">
+                        SX
+                    </div>
+
+                    <div>
+                        <span class="sx-card-kicker">SENSOR PROFILE</span>
+
+                        <h3>
+                            @registeredSensor.Name
+                        </h3>
+
+                        <span class="sx-profile-id">
+                            @registeredSensor.SensorId
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="sx-profile-grid">
+
+                    <div class="sx-profile-item">
+                        <span>DEVICE IDENTIFIER</span>
+                        <strong>@registeredSensor.DeviceIdentifier</strong>
+                    </div>
+
+                    <div class="sx-profile-item">
+                        <span>SENSOR CATEGORY</span>
+                        <strong>@registeredSensor.SensorType</strong>
+                    </div>
+
+                    <div class="sx-profile-item">
+                        <span>DEPLOYMENT LOCATION</span>
+                        <strong>@registeredSensor.Location</strong>
+                    </div>
+
+                    <div class="sx-profile-item">
+                        <span>REGISTERED</span>
+                        <strong>@registeredSensor.RegisteredAtUtc</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ATTACHMENTS -->
+            <section class="sx-attachment-section">
+
+                <div class="sx-section-heading">
+
+                    <div>
+                        <span class="sx-section-kicker">02 / HARDWARE EVIDENCE</span>
+
+                        <h2>Sensor Attachments</h2>
+
+                        <p>
+                            Attach configuration files, deployment photographs,
+                            hardware logs, or other supporting evidence directly
+                            to this sensor profile.
+                        </p>
+                    </div>
+
+                    <div class="sx-security-badge">
+                        <span>✓</span>
+                        SECURE UPLOAD
+                    </div>
+
+                </div>
+
+
+                <div class="sx-upload-panel">
+
+                    <div class="sx-upload-header">
+                        <div class="sx-upload-icon">
+                            ↑
+                        </div>
+
+                        <div>
+                            <strong>
+                                Upload device evidence
+                            </strong>
+
+                            <span>
+                                Maximum file size: 10 MB
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="sx-field">
+
+                        <label for="attachmentType">
+                            Attachment Type
+                        </label>
+
+                        <InputSelect id="attachmentType"
+                                     class="sx-input"
+                                     @bind-Value="attachmentType"
+                                     disabled="@isUploading">
+
+                            <option value="Configuration">
+                                Device Configuration
+                            </option>
+
+                            <option value="Photo">
+                                Deployment Photo
+                            </option>
+
+                            <option value="Log">
+                                Hardware Log
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </InputSelect>
+
+                    </div>
+
+
+                    <div class="sx-file-drop">
+
+                        <InputFile id="attachment"
+                                   OnChange="HandleFileSelected"
+                                   accept=".jpg,.jpeg,.png,.txt,.log,.json,.xml,.csv,.pdf"
+                                   disabled="@isUploading" />
+
+                        <label for="attachment">
+
+                            <span class="sx-file-icon">
+                                +
+                            </span>
+
+                            <strong>
+                                Select a file
+                            </strong>
+
+                            <span>
+                                JPG, PNG, TXT, LOG, JSON, XML, CSV or PDF
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    @if (selectedFile is not null)
+                    {
+                        <div class="sx-selected-file">
+
+                            <div class="sx-file-preview-icon">
+                                FILE
+                            </div>
+
+                            <div class="sx-selected-file-info">
+
+                                <strong>
+                                    @selectedFile.Name
+                                </strong>
+
+                                <span>
+                                    @FormatFileSize(selectedFile.Size)
+                                    ·
+                                    @(string.IsNullOrWhiteSpace(
+                                        selectedFile.ContentType)
+                                        ? "Unknown type"
+                                        : selectedFile.ContentType)
+                                </span>
+
+                            </div>
+
+                            <span class="sx-ready-badge">
+                                READY
+                            </span>
+
+                        </div>
+                    }
+
+
+                    <div class="sx-upload-actions">
+
+                        <button type="button"
+                                class="sx-button sx-button-primary"
+                                @onclick="UploadAttachmentAsync"
+                                disabled="@(selectedFile is null || isUploading)">
+
+                            @(isUploading
+                                ? "Uploading securely..."
+                                : "Upload Attachment")
+
+                        </button>
+
+                    </div>
+
+
+                    @if (isUploading)
+                    {
+                        <div class="sx-upload-progress"
+                             role="status"
+                             aria-live="polite">
+
+                            <div class="sx-spinner"></div>
+
+                            <div>
+                                <strong>Upload in progress</strong>
+                                <span>Securely transferring attachment to the gateway...</span>
+                            </div>
+
+                        </div>
+                    }
+
+
+                    @if (!string.IsNullOrWhiteSpace(uploadMessage))
+                    {
+                        <div class="sx-feedback @(uploadedAttachment is not null ? "success" : "error")"
+                             role="status"
+                             aria-live="polite">
+
+                            <span class="sx-feedback-icon">
+                                @(uploadedAttachment is not null ? "✓" : "!")
+                            </span>
+
+                            <span>@uploadMessage</span>
+
+                        </div>
+                    }
+
+
+                    @if (uploadedAttachment is not null)
+                    {
+                        <div class="sx-uploaded-card">
+
+                            <div class="sx-uploaded-check">
+                                ✓
+                            </div>
+
+                            <div class="sx-uploaded-info">
+
+                                <span class="sx-card-kicker">
+                                    ATTACHMENT STORED
+                                </span>
+
+                                <h3>
+                                    @uploadedAttachment.OriginalFileName
+                                </h3>
+
+                                <div class="sx-uploaded-details">
+
+                                    <span>
+                                        <strong>Type:</strong>
+                                        @uploadedAttachment.AttachmentType
+                                    </span>
+
+                                    <span>
+                                        <strong>Size:</strong>
+                                        @FormatFileSize(
+                                            uploadedAttachment.FileSizeBytes)
+                                    </span>
+
+                                    <span>
+                                        <strong>Uploaded:</strong>
+                                        @uploadedAttachment.UploadedAtUtc
+                                    </span>
+
+                                </div>
+
+                                @if (uploadedAttachment.IsEncrypted)
+                                {
+                                    <span class="sx-encryption-badge">
+                                        ✓ Encrypted
+                                        @uploadedAttachment.EncryptionAlgorithm
+                                    </span>
+                                }
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+
+            </section>
+
+        </section>
+    }
+
+</div>
+
 
 @code {
+
     private const long MaximumFileSize =
         10 * 1024 * 1024;
 
