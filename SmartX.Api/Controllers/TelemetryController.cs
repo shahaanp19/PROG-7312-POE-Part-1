@@ -12,15 +12,18 @@ public class TelemetryController : ControllerBase
     private readonly TelemetryIngestionService _ingestionService;
     private readonly RecursiveDeploymentValidator _deploymentValidator;
     private readonly SensorRegistryService _sensorRegistry;
+    private readonly TelemetryBatchProcessor _batchProcessor;
 
     public TelemetryController(
         TelemetryIngestionService ingestionService,
         RecursiveDeploymentValidator deploymentValidator,
-        SensorRegistryService sensorRegistry)
+        SensorRegistryService sensorRegistry,
+        TelemetryBatchProcessor batchProcessor)
     {
         _ingestionService = ingestionService;
         _deploymentValidator = deploymentValidator;
         _sensorRegistry = sensorRegistry;
+        _batchProcessor = batchProcessor;
     }
 
     [HttpGet("health")]
@@ -74,7 +77,8 @@ public class TelemetryController : ControllerBase
             });
         }
 
-        if (string.IsNullOrWhiteSpace(request.Unit))
+        if (string.IsNullOrWhiteSpace(
+                request.Unit))
         {
             return BadRequest(new
             {
@@ -155,7 +159,6 @@ public class TelemetryController : ControllerBase
         return Ok(result);
     }
 
-
     [HttpGet("generic-demo")]
     public IActionResult GenericDemo()
     {
@@ -227,7 +230,6 @@ public class TelemetryController : ControllerBase
             }
         });
     }
-
 
     [HttpGet("recursive-validation-demo")]
     public IActionResult RecursiveValidationDemo()
@@ -339,10 +341,16 @@ public class TelemetryController : ControllerBase
         {
             demonstration =
                 "Recursive deployment validation",
+
             targetNode,
+
             isValid,
-            hierarchyDepth = path.Count,
+
+            hierarchyDepth =
+                path.Count,
+
             path,
+
             validationResult =
                 isValid
                     ? "Target exists on a fully configured deployment path."
@@ -400,11 +408,18 @@ public class TelemetryController : ControllerBase
         {
             demonstration =
                 "Recursive validation failure handling",
+
             targetNode,
+
             isValid,
-            hierarchyDepth = path.Count,
+
+            hierarchyDepth =
+                path.Count,
+
             path,
+
             expectedResult = false,
+
             reason =
                 "The target exists below an unconfigured deployment node, " +
                 "so the recursive validator correctly rejects the path."
@@ -450,21 +465,29 @@ public class TelemetryController : ControllerBase
         {
             demonstration =
                 "Recursive missing-target handling",
+
             targetNode,
+
             isValid,
-            hierarchyDepth = path.Count,
+
+            hierarchyDepth =
+                path.Count,
+
             path,
+
             expectedResult = false,
+
             validationResult =
                 "The requested target does not exist in the deployment hierarchy."
         });
     }
 
     [HttpGet("historical-batch-demo")]
-    public IActionResult HistoricalBatchDemo(
-        [FromServices]
-        TelemetryBatchProcessor batchProcessor)
+    public IActionResult HistoricalBatchDemo()
     {
+        // Jagged array:
+        // each batch owns only the memory required for its readings.
+        // This avoids padding every batch to the size of the largest batch.
         float[][] historicalBatches =
         {
             new float[] { 21.5f, 22.1f, 22.8f },
@@ -473,11 +496,18 @@ public class TelemetryController : ControllerBase
         };
 
         var packets =
-            batchProcessor.ProcessHistoricalBatches(
+            _batchProcessor.ProcessHistoricalBatches(
                 historicalBatches);
 
+        // Rectangular representation for matrix-oriented processing.
         var matrix =
-            batchProcessor.CreateTelemetryMatrix(
+            _batchProcessor.CreateTelemetryMatrix(
+                historicalBatches);
+
+        // Contiguous one-dimensional representation for sequential
+        // processing and bulk operations.
+        var flattened =
+            _batchProcessor.FlattenTelemetryBatches(
                 historicalBatches);
 
         var matrixRows =
@@ -508,24 +538,71 @@ public class TelemetryController : ControllerBase
         }
 
         var batchSizes =
-            historicalBatches
-                .Select(batch => batch?.Length ?? 0)
-                .ToArray();
+            new int[historicalBatches.Length];
 
-        var totalReadings =
-            batchSizes.Sum();
+        var totalReadings = 0;
+
+        for (var index = 0;
+             index < historicalBatches.Length;
+             index++)
+        {
+            var batch =
+                historicalBatches[index];
+
+            var size =
+                batch?.Length ?? 0;
+
+            batchSizes[index] =
+                size;
+
+            totalReadings +=
+                size;
+        }
+
+        var largestBatchSize = 0;
+
+        for (var index = 0;
+             index < batchSizes.Length;
+             index++)
+        {
+            if (batchSizes[index] >
+                largestBatchSize)
+            {
+                largestBatchSize =
+                    batchSizes[index];
+            }
+        }
 
         return Ok(new
         {
             demonstration =
-                "Jagged arrays, multidimensional arrays and generic collections",
+                "Jagged arrays, multidimensional arrays, contiguous buffers and generic collections",
 
             sourceData = new
             {
                 batchCount =
                     historicalBatches.Length,
+
                 batchSizes,
-                totalReadings
+
+                totalReadings,
+
+                largestBatchSize
+            },
+
+            memoryLayout = new
+            {
+                jaggedRepresentation =
+                    "Variable-length arrays with no padding between batches",
+
+                rectangularRepresentation =
+                    "Row-major multidimensional array for matrix-oriented processing",
+
+                contiguousRepresentation =
+                    "One-dimensional float buffer for sequential processing",
+
+                flattenedElementCount =
+                    flattened.Length
             },
 
             collectionProcessing = new
@@ -539,11 +616,18 @@ public class TelemetryController : ControllerBase
 
             packets,
 
+            flattened,
+
             matrix = new
             {
-                rows = matrixRows,
-                columns = matrixColumns,
-                data = matrixData
+                rows =
+                    matrixRows,
+
+                columns =
+                    matrixColumns,
+
+                data =
+                    matrixData
             },
 
             validation = new
@@ -551,9 +635,14 @@ public class TelemetryController : ControllerBase
                 packetCountMatchesSource =
                     packets.Count == totalReadings,
 
+                flattenedCountMatchesSource =
+                    flattened.Length == totalReadings,
+
                 matrixDimensionsValid =
-                    matrixRows == historicalBatches.Length &&
-                    matrixColumns == batchSizes.Max()
+                    matrixRows ==
+                        historicalBatches.Length &&
+                    matrixColumns ==
+                        largestBatchSize
             }
         });
     }
