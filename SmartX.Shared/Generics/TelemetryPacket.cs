@@ -69,3 +69,9 @@ public class TelemetryPacket<T>
     {
     }
 }
+
+//Reference
+//BillWagner (n.d.). Generic classes and methods. [online] learn.microsoft.com. Available at: https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics [Accessed 13 Sept. 2026].
+//dotnet-bot (2026). System.ComponentModel.DataAnnotations Namespace. [online] Microsoft.com. Available at: https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations?view=net-10.0 [Accessed 13 Sept. 2026].
+//dotnet-bot (2026). ArgumentException.ThrowIfNullOrWhiteSpace(String, String) Method (System). [online] MicrosoftLearn. Available at: https://learn.microsoft.com/en-us/dotnet/api/system.argumentexception.throwifnullorwhitespace?view=net-10.0 [Accessed 13 Sept. 2026].
+//ajcvickers (2020). Entity types with constructors - EF Core. [online] Microsoft.com. Available at: https://learn.microsoft.com/en-us/ef/core/modeling/constructors [Accessed 13 Sept. 2026].
