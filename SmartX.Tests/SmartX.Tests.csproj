@@ -27,7 +27,6 @@
     <Folder Include="Integration\" />
     <Folder Include="Models\" />
     <Folder Include="Validation\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
