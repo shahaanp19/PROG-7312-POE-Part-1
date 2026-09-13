@@ -8,10 +8,6 @@ public sealed class DashboardEngagementService
 
     private readonly List<UserIssue> _issues = new();
 
-    // =========================================================
-    // ENGAGEMENT SNAPSHOT
-    // =========================================================
-
     public DashboardEngagementSnapshot GetEngagementSnapshot()
     {
         lock (_lock)
@@ -88,10 +84,6 @@ public sealed class DashboardEngagementService
         }
     }
 
-    // =========================================================
-    // ISSUE LIST
-    // =========================================================
-
     public IReadOnlyList<UserIssue> GetIssues()
     {
         lock (_lock)
@@ -104,11 +96,6 @@ public sealed class DashboardEngagementService
                 .AsReadOnly();
         }
     }
-
-    // =========================================================
-    // ADD ISSUE
-    // =========================================================
-
     public UserIssue AddIssue(
         string title,
         string description,
@@ -159,10 +146,6 @@ public sealed class DashboardEngagementService
         }
     }
 
-    // =========================================================
-    // RESOLVE ISSUE
-    // =========================================================
-
     public bool ResolveIssue(Guid issueId)
     {
         if (issueId == Guid.Empty)
@@ -193,11 +176,6 @@ public sealed class DashboardEngagementService
             return true;
         }
     }
-
-    // =========================================================
-    // OPEN ISSUE COUNT
-    // =========================================================
-
     public int GetOpenIssueCount()
     {
         lock (_lock)
@@ -205,10 +183,6 @@ public sealed class DashboardEngagementService
             return _issues.Count(IsOpen);
         }
     }
-
-    // =========================================================
-    // PRIORITY CALCULATION
-    // =========================================================
 
     private static int GetPriorityScore(
         UserIssue issue)
@@ -223,10 +197,6 @@ public sealed class DashboardEngagementService
             _ => 50
         };
     }
-
-    // =========================================================
-    // ATTENTION LEVEL
-    // =========================================================
 
     private static string DetermineAttentionLevel(
         int criticalCount,
@@ -251,10 +221,6 @@ public sealed class DashboardEngagementService
         return "All Clear";
     }
 
-    // =========================================================
-    // STATUS CHECK
-    // =========================================================
-
     private static bool IsOpen(
         UserIssue issue)
     {
@@ -262,10 +228,6 @@ public sealed class DashboardEngagementService
             "Open",
             StringComparison.OrdinalIgnoreCase);
     }
-
-    // =========================================================
-    // SEVERITY NORMALISATION
-    // =========================================================
 
     private static string NormaliseSeverity(
         string? severity)
@@ -293,10 +255,6 @@ public sealed class DashboardEngagementService
                 nameof(severity))
         };
     }
-
-    // =========================================================
-    // SAFE ISSUE COPY
-    // =========================================================
 
     private static UserIssue CloneIssue(
         UserIssue source)

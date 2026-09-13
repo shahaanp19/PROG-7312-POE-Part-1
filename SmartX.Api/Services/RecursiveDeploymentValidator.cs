@@ -4,15 +4,6 @@ namespace SmartX.Api.Services;
 
 public sealed class RecursiveDeploymentValidator
 {
-    /// <summary>
-    /// Recursively searches a deployment hierarchy for a target node.
-    ///
-    /// A node is only considered valid when every node on the path from
-    /// the root to the target is configured.
-    ///
-    /// The method uses depth-first traversal and backtracking so that
-    /// the returned path contains only the successful hierarchy branch.
-    /// </summary>
     public bool ValidateNode(
         DeploymentNode node,
         string targetNodeName,
@@ -42,8 +33,7 @@ public sealed class RecursiveDeploymentValidator
         List<string> path,
         HashSet<Guid> visited)
     {
-        // Protects the recursive traversal against malformed cyclic
-        // deployment structures.
+        // Protects the recursive traversal against malformed cyclic deployment structures.
         if (!visited.Add(node.Id))
         {
             return false;

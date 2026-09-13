@@ -4,11 +4,6 @@ namespace SmartX.Api.Services;
 
 public sealed class TelemetryBatchProcessor
 {
-    /// <summary>
-    /// Processes historical telemetry stored as a jagged array.
-    /// The jagged structure preserves variable batch sizes without
-    /// allocating unused values for shorter batches.
-    /// </summary>
     public List<TelemetryPacket<float>> ProcessHistoricalBatches(
         float[][] historicalBatches)
     {
@@ -57,16 +52,7 @@ public sealed class TelemetryBatchProcessor
         return packets;
     }
 
-    /// <summary>
-    /// Converts variable-length telemetry batches into a rectangular
-    /// multidimensional array for matrix-oriented processing.
-    ///
-    /// The matrix uses row-major access:
-    /// row = telemetry batch
-    /// column = reading within the batch
-    ///
-    /// Unused cells are left at the default float value of zero.
-    /// </summary>
+    
     public float[,] CreateTelemetryMatrix(
         float[][] historicalBatches)
     {
@@ -113,13 +99,7 @@ public sealed class TelemetryBatchProcessor
         return matrix;
     }
 
-    /// <summary>
-    /// Flattens variable-length historical telemetry into one contiguous
-    /// one-dimensional buffer.
-    ///
-    /// This provides a compact representation for sequential processing,
-    /// bulk validation and memory-efficient traversal.
-    /// </summary>
+    
     public float[] FlattenTelemetryBatches(
         float[][] historicalBatches)
     {

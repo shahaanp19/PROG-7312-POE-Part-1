@@ -28,10 +28,4 @@
     <ProjectReference Include="..\SmartX.Shared\SmartX.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Uploads\Images\" />
-    <Folder Include="Uploads\Logs\" />
-    <Folder Include="Uploads\Configs\" />
-  </ItemGroup>
-
 </Project>
