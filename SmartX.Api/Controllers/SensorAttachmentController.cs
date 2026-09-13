@@ -30,7 +30,7 @@ public sealed class SensorAttachmentController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<SensorAttachmentResponse>> Upload(
         Guid sensorDeviceId,
-        [FromForm] IFormFile file,
+        IFormFile file,
         [FromForm] string attachmentType = "Other",
         CancellationToken cancellationToken = default)
     {
@@ -147,9 +147,6 @@ public sealed class SensorAttachmentController : ControllerBase
                     storedFileName,
                     cancellationToken);
 
-            HttpContext.Response.RegisterForDispose(
-                decryptedFile);
-
             return File(
                 decryptedFile,
                 "application/octet-stream",
@@ -214,7 +211,6 @@ public sealed class SensorAttachmentController : ControllerBase
         }
     }
 }
-
 
 //References
 //tdykstra (2024). Create web APIs with ASP.NET Core. [online] Microsoft.com. Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-10.0 [Accessed 12 Sept. 2026].
