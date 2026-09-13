@@ -1,0 +1,40 @@
+name: SmartX CI
+
+'on':
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Display .NET version
+        run: dotnet --version
+
+      - name: Restore dependencies
+        run: dotnet restore SmartX-IoT.slnx
+
+      - name: Build solution
+        run: dotnet build SmartX-IoT.slnx --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test SmartX.Tests/SmartX.Tests.csproj --configuration Release --no-build --verbosity normal
